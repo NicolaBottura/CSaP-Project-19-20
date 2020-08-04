@@ -1,6 +1,4 @@
 # CSaP-Project-19/20
-#
-#
 # Nicola Bottura 
 
 A "whiteboard" application, where a community of users could interact and exchange messages.
@@ -21,7 +19,7 @@ Note: 	use processes (not threads) and SYSV IPCs (not POSIX).
 	Messages cannot be edited or deleted once sent/published.
 	Users are added/deleted to the system by an external administrator which manages credentials.
 
-[CLIENT COMMANDS]
+			[CLIENT COMMANDS]
 1. authenticate -> *reads and sends user name and password to server*
 2. list \[Messages|Topics] ->	*Gets list of messages, read or unread, ordered by topics*
 				*Lists available|subscribed topics*
