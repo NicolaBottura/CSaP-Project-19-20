@@ -20,6 +20,7 @@ Note: 	use processes (not threads) and SYSV IPCs (not POSIX).
 	Users are added/deleted to the system by an external administrator which manages credentials.
 
 [CLIENT COMMANDS]
+
 	1. authenticate -> *reads and sends user name and password to server*
 	2. list \[Messages|Topics] ->	*Gets list of messages, read or unread, ordered by topics*
 					*Lists available|subscribed topics*
