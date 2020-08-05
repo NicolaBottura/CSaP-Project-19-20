@@ -8,11 +8,20 @@
 #include <sys/types.h>	/* for waitpid() */
 #include <sys/wait.h>
 
-/* Stuff for the Socket creationg/management file */
+/* Stuff for the Socket creation/management file whiteboard_sock. */
 #define DOMAIN AF_INET
 #define TYPE SOCK_STREAM
 #define PROTOCOL IPPROTO_TCP
 #define MAXPENDING 5
+
+/* Stuff for shared memory creation/management file whiteboard_shm.c */
+#define SHMPERM 0600
+#define SHMKEY 0x121314
+int shmid;
+
+/* Both used only in server.c */
+int server_socket, 		/* Server Socket FD */
+client_socket;			/* Client Socket FD */
 
 /* Prototypes */
 void DieWithError(char *message);

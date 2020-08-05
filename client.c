@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
 		DieWithError("client-socket() failed\n");
 
 	/* --- Local address structure --- */
-	memset(&saddr, 0, sizeof(saddr));	/* Zero out structure */
-	saddr.sin_family=DOMAIN;			/* Family -> AF_INET: Internet address */
+	memset(&saddr, 0, sizeof(saddr));			/* Zero out structure */
+	saddr.sin_family=DOMAIN;					/* Family -> AF_INET: Internet address */
 	saddr.sin_port=htons(server_port);			/* Local port on which the server listen */
 	saddr.sin_addr.s_addr=inet_addr(server_ip);	/* Any incoming interface */
 
