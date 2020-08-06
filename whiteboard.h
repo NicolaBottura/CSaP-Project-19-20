@@ -13,10 +13,11 @@
 #define BUFFSIZE 256
 
 /* Stuff for files in utils.c */
-char menu[] = "****** WHITEBOARD MENU ******\n \
+char buff[BUFFSIZE];
+#define MENU "****** WHITEBOARD MENU ******\n \
 1) Authentication\n \
 2) List the topics\n \
-0) Exit\n ";
+0) Exit\n "
 
 /* Stuff for the Socket creation/management file whiteboard_sock. */
 #define DOMAIN AF_INET
@@ -47,7 +48,7 @@ auth_user user;
 /* Prototypes */
 void DieWithError(char *message);
 void sigint(int signal);
-char pong(int client_socket, char *message)
+char *pong(int client_socket, char *message);
 int create_socket(unsigned short port);
 int accept_connection(int server_socket);
-int authentication(int client_socket)
+int authentication(int client_socket);

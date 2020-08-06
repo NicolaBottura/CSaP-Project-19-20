@@ -2,8 +2,6 @@
 
 #define SIZE 1000	/* !!!Provvisorio!!! */
 
-void DieWithError(char *message);
-
 int init_shm(int perms)
 {
 	if((shmid=shmget(SHMKEY, SIZE, perms)) < 0)

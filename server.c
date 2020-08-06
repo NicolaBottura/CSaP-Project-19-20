@@ -1,11 +1,15 @@
 #include "whiteboard.h"
 
+//menu = ""; /* Menu with choices for the client - returns the operation chosen */
+
 int main(int argc, char *argv[])
 {
 	unsigned short port;	/* Port on which the Server listen */
-	int child_counter=0,	/* Child processes counter */
-		op;				/* Operation chosen from user */
+	int child_counter=0;	/* Child processes counter */
+	int operation;
 	pid_t pid;				/* Variable to store return value of fork() */
+	char response[BUFFSIZE];
+
 
 	if(signal(SIGINT, sigint) < 0)			/* If ctrl+c while running it calls an handler defined in utils.c*/
 		DieWithError("signal() failed\n");
@@ -20,12 +24,17 @@ int main(int argc, char *argv[])
 		switch(pid=fork())
 		{
 			case 0:		/* CHILD */
-				op=welcome(client_socket, menu); /* Menu with choices for the client - returns the operation chosen */
+				strcpy(response, pong(client_socket, MENU)); /* Send the menu to the client */
 
-				switch(op)
+				operation = strtol(response, NULL, 0); /* Convert the answer in integer */
+
+				switch(operation)	/* Switch/case based on the choice of the client */
 				{
-					case 1: /* AUTHENTICATION */
-						authentication(client_socket);			
+					case 1:
+					{
+						authentication(client_socket);
+						break;
+					}
 				}
 
 				exit(0);

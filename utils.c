@@ -21,12 +21,13 @@ void sigint(int signal)
 	Client: ping
 	Server: pong back
 */
-char pong(int client_socket, char *message)
+char *pong(int client_socket, char *message)
 {
-	char buff[BUFFSIZE];
 	int msg_len, bytesreceived;
 
-	msg_len = sizeof(message);
+	msg_len = strlen(message);
+
+	printf("[3] I'm pong() with message = %s\n", message);
 
 	if((send(client_socket, message, msg_len, 0)) != msg_len)
 		DieWithError("send() failed\n");
@@ -35,7 +36,8 @@ char pong(int client_socket, char *message)
 		DieWithError("recv() failed\n");
 
 	buff[bytesreceived]='\0';
-	printf("Received: %s\n", buff);
+	
+	printf("Received: %s\n", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE
 	
 	return buff;
 }

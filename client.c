@@ -1,10 +1,12 @@
 #include "whiteboard.h"
 
+void communication(int sfd);
+
 int main(int argc, char *argv[])
 {
 	unsigned short server_port;
-	char *server_ip, buff[BUFFSIZE], *op; // fixa
-	int sfd, bytereceived;
+	char *server_ip;
+	int sfd;
 	struct sockaddr_in saddr;
 
 	if(argc != 3)
@@ -25,18 +27,30 @@ int main(int argc, char *argv[])
 	if((connect(sfd, (struct sockaddr *)&saddr, sizeof(saddr))) < 0)
 		DieWithError("connect() failed\n");
 
-
-	if((bytereceived=recv(sfd, buff, sizeof(buff), 0)) <= 0)
-		DieWithError("recv() failed\n");
-
-	buff[bytereceived]='\0';
-	printf("%s\n", buff);
-
-	scanf("%s", op);
-
-	send(sfd, op, sizeof(op), 0);
-
-
+	communication(sfd);
+	communication(sfd);
+	communication(sfd);
+	communication(sfd);
+	
 	close(sfd); /* Close the connection and destroy the socket */
 	exit(0);
+}
+
+/* Function used to send and receive messages from the server */
+void communication(int sfd)
+{
+	int bytereceived=0;
+	char response[BUFFSIZE], input[BUFFSIZE];
+
+	memset(response, 0, sizeof(response));
+	if((bytereceived=recv(sfd, response, sizeof(response)-1, 0)) <= 0)
+		DieWithError("recv() failed\n");
+
+	response[bytereceived]='\0';
+
+	printf("%s\n", response);
+	scanf("%s", input);
+
+	if((send(sfd, input, sizeof(input), 0)) < 0)
+		DieWithError("send() failed\n");
 }
