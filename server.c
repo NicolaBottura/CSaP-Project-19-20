@@ -1,12 +1,10 @@
 #include "whiteboard.h"
 
-void DieWithError(char *message);
-void sigint(int signal);
-
 int main(int argc, char *argv[])
 {
 	unsigned short port;	/* Port on which the Server listen */
-	int child_counter=0;	/* Child processes counter */
+	int child_counter=0,	/* Child processes counter */
+		op;				/* Operation chosen from user */
 	pid_t pid;				/* Variable to store return value of fork() */
 
 	if(signal(SIGINT, sigint) < 0)			/* If ctrl+c while running it calls an handler defined in utils.c*/
@@ -22,7 +20,16 @@ int main(int argc, char *argv[])
 		switch(pid=fork())
 		{
 			case 0:		/* CHILD */
+				op=welcome(client_socket, menu); /* Menu with choices for the client - returns the operation chosen */
+
+				switch(op)
+				{
+					case 1: /* AUTHENTICATION */
+						authentication(client_socket);			
+				}
+
 				exit(0);
+			
 			case -1:	/* Error */
 				DieWithError("fork() failed\n");
 		}

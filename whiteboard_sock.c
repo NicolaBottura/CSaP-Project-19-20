@@ -1,7 +1,5 @@
 #include "whiteboard.h"
 
-void DieWithError(char *message);
-
 int create_socket(unsigned short port)
 {
 	int sfd;

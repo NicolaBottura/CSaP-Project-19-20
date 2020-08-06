@@ -1,12 +1,10 @@
 #include "whiteboard.h"
 
-void DieWithError(char *message);
-
 int main(int argc, char *argv[])
 {
 	unsigned short server_port;
-	char *server_ip;
-	int sfd;
+	char *server_ip, buff[BUFFSIZE], *op; // fixa
+	int sfd, bytereceived;
 	struct sockaddr_in saddr;
 
 	if(argc != 3)
@@ -26,6 +24,18 @@ int main(int argc, char *argv[])
 
 	if((connect(sfd, (struct sockaddr *)&saddr, sizeof(saddr))) < 0)
 		DieWithError("connect() failed\n");
+
+
+	if((bytereceived=recv(sfd, buff, sizeof(buff), 0)) <= 0)
+		DieWithError("recv() failed\n");
+
+	buff[bytereceived]='\0';
+	printf("%s\n", buff);
+
+	scanf("%s", op);
+
+	send(sfd, op, sizeof(op), 0);
+
 
 	close(sfd); /* Close the connection and destroy the socket */
 	exit(0);
