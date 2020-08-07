@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	
 	communication(sfd); /* Username exchange */
 	communication(sfd); /* Password exchange */
-	communication(sfd); /* Response exchange */
+	communication(sfd); /* Login Response exchange */
 	
 	close(sfd); /* Close the connection and destroy the socket */
 	exit(0);
