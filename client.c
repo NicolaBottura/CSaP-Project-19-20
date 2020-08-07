@@ -12,6 +12,9 @@ int main(int argc, char *argv[])
 	if(argc != 3)
 		DieWithError("Usage: ./client <server_ip> <server_ip>\n");
 
+	if(init_shm(SHMPERM) < 0)					
+		DieWithError("init_shm() failed\n");
+
 	server_ip=argv[1];
 	server_port=atoi(argv[2]);
 
@@ -27,10 +30,10 @@ int main(int argc, char *argv[])
 	if((connect(sfd, (struct sockaddr *)&saddr, sizeof(saddr))) < 0)
 		DieWithError("connect() failed\n");
 
-	communication(sfd);
-	communication(sfd);
-	communication(sfd);
-	communication(sfd);
+	
+	communication(sfd); /* Username exchange */
+	communication(sfd); /* Password exchange */
+	communication(sfd); /* Response exchange */
 	
 	close(sfd); /* Close the connection and destroy the socket */
 	exit(0);
@@ -47,10 +50,19 @@ void communication(int sfd)
 		DieWithError("recv() failed\n");
 
 	response[bytereceived]='\0';
-
 	printf("%s\n", response);
+
+	/* Checks during login if I failed it, if yes, exit */
+	if((strcmp(response, "Login Failed!") == 0) && (user->logged == 0))
+	{
+		close(sfd);
+		exit(0);
+	}
+
 	scanf("%s", input);
 
 	if((send(sfd, input, sizeof(input), 0)) < 0)
 		DieWithError("send() failed\n");
+
+	return ;
 }

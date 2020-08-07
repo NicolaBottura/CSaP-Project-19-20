@@ -11,6 +11,7 @@ void sigint(int signal)
 	/* Add the remove sem and shm function calls here */
 	close(server_socket);
 	close(client_socket);
+	remove_shm();
 	
 	printf("Signal %d occurred, exiting.\n", signal);
 	exit(0);
@@ -27,7 +28,7 @@ char *pong(int client_socket, char *message)
 
 	msg_len = strlen(message);
 
-	printf("[3] I'm pong() with message = %s\n", message);
+	//printf("[3] I'm pong() with message = %s\n", message); // MESSAGGIO DI CONTROLLO - ELIMINARE
 
 	if((send(client_socket, message, msg_len, 0)) != msg_len)
 		DieWithError("send() failed\n");
@@ -37,7 +38,7 @@ char *pong(int client_socket, char *message)
 
 	buff[bytesreceived]='\0';
 	
-	printf("Received: %s\n", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE
+	//printf("Received: %s\n", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE
 	
 	return buff;
 }

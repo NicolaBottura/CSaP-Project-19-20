@@ -9,6 +9,8 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <sys/shm.h>
+#include <sys/ipc.h>
 
 #define BUFFSIZE 256
 
@@ -27,7 +29,7 @@ char buff[BUFFSIZE];
 
 /* Stuff for shared memory creation/management file whiteboard_shm.c */
 #define SHMPERM 0600
-#define SHMKEY 0x121314
+#define SHMKEY 0x12345
 int shmid;
 
 /* Both used only in server.c */
@@ -37,18 +39,22 @@ client_socket;			/* Client Socket FD */
 /* stuff for authentication process - whiteboard_auth.c */
 #define AUTHLEN 20
 #define CREDFILE "credentials.txt"
+
 /* Struct to contain things I need for authentication */
+#define MAXRET 3
 typedef struct authentication {
 	char username[AUTHLEN];
 	char password[AUTHLEN];
-	int logged;		/* 1 = Logged - 0 = Not logged */ 
+	int logged;		/* 1 = Logged - 0 = Not logged */
 } auth_user;
-auth_user user;
+auth_user *user;
 
 /* Prototypes */
 void DieWithError(char *message);
+int init_shm(int perms);
+int remove_shm();
 void sigint(int signal);
 char *pong(int client_socket, char *message);
 int create_socket(unsigned short port);
 int accept_connection(int server_socket);
-int authentication(int client_socket);
+void authentication(int client_socket);
