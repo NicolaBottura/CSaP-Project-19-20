@@ -3,13 +3,21 @@
 int main(int argc, char *argv[])
 {
 	unsigned short port;	/* Port on which the Server listen */
-	int child_counter=0;	/* Child processes counter */
-	int operation;
+	int child_counter=0,	/* Child processes counter */
+	operation;
 	pid_t pid;				/* Variable to store return value of fork() */
 	char response[BUFFSIZE];
 
+
+
 	if(signal(SIGINT, sigint) < 0)			/* If ctrl+c while running it calls an handler defined in utils.c*/
 		DieWithError("signal() failed\n");
+
+	if(get_sem(SEMPERM | IPC_CREAT) < 0)
+		DieWithError("get_sem() failed\n");
+
+	if(init_sem() < 0)
+		DieWithError("init_sem() failed\n");
 
 	if(init_shm(SHMPERM | IPC_CREAT) < 0)	/* Init the shared memory portion */
 		DieWithError("init_shm() failed\n");
@@ -24,10 +32,13 @@ int main(int argc, char *argv[])
 		switch(pid=fork())
 		{
 			case 0:		/* CHILD */
+				p(1);
 
 				authentication(client_socket); /* Send the authentication form and if the login is successful, send the menu */
 				operation = strtol(buff, NULL, 0); /* Convert the client's answer in integer, which is stored in buff, the last
 												item seen by the pong() function, which is global and definer in whiteboard.h */
+
+				v(2);
 
 				switch(operation)	/* Switch-case based on the choice of the client */
 				{

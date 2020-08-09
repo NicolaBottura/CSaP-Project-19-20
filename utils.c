@@ -8,10 +8,10 @@ void DieWithError(char *message)
 
 void sigint(int signal)
 {
-	/* Add the remove sem and shm function calls here */
+	remove_shm();
+	remove_sem();
 	close(server_socket);
 	close(client_socket);
-	remove_shm();
 	
 	printf("Signal %d occurred, exiting.\n", signal);
 	exit(0);
