@@ -1,20 +1,32 @@
 #include "whiteboard.h"
 
-void authentication(int client_socket)
+/* 
+	Function used to authenticate the users once they connect to the server's listening socket.
+		Ask for username and password using the function pong() defined in utils.c which just
+			send a message and receive the client's answer.		
+*/
+int authentication(int client_socket)
 {
 	FILE *fd;
-	char name[AUTHLEN], passwd[AUTHLEN];
-	char ret_string[BUFFSIZE];
-
+	char name[AUTHLEN], passwd[AUTHLEN], 
+	ret_string[BUFFSIZE];
+	int namelen, passlen;
+	
 	user->logged=0; /* Set the variabled logged as 0 */
 
 	/* Send to the client the string to ask a username */
 	strcpy(name, pong(client_socket, "*** Welcome to Whiteboard ***\nUsername: "));
 	strcpy(passwd, pong(client_socket, "Password: "));	/* Send to the client the string to ask a password */
 
+	/* Remove the '\n' from the user's input credentials */
+	namelen=strlen(name);
+	name[namelen-1]=0;
+	passlen=strlen(passwd);
+	passwd[passlen-1]=0;
+
 	if((fd=fopen(CREDFILE, "r")) < 0)	/* Open the file in read mode with the credentials of real users */
 		DieWithError("open failed\n");
-	
+
 	/* Check each line of the file, and if a pair username:password matches with the client input change the 
 		value of logged and print a message.
 		If no match just exit from the while and print a related message */
@@ -44,5 +56,5 @@ void authentication(int client_socket)
 
 	fclose(fd);		/* Close the file */
 
-	return ;
+	return 0;
 }

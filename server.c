@@ -8,8 +8,6 @@ int main(int argc, char *argv[])
 	pid_t pid;				/* Variable to store return value of fork() */
 	char response[BUFFSIZE];
 
-
-
 	if(signal(SIGINT, sigint) < 0)			/* If ctrl+c while running it calls an handler defined in utils.c*/
 		DieWithError("signal() failed\n");
 
@@ -28,28 +26,35 @@ int main(int argc, char *argv[])
 	for(;;)	/* Run forever */
 	{
 		client_socket=accept_connection(server_socket);
+		
 
 		switch(pid=fork())
 		{
 			case 0:		/* CHILD */
-				p(1);
+				p(0);
 
 				authentication(client_socket); /* Send the authentication form and if the login is successful, send the menu */
+
 				operation = strtol(buff, NULL, 0); /* Convert the client's answer in integer, which is stored in buff, the last
 												item seen by the pong() function, which is global and definer in whiteboard.h */
 
-				v(2);
+				v(0);
 
 				switch(operation)	/* Switch-case based on the choice of the client */
 				{
 					case 1:
 					{
-						printf("Funzia!!\n");
+						create_topics(client_socket);
+						break;
+					}
+					case 2:
+					{
+						list_topics(client_socket);
 						break;
 					}
 				}
 
-				user->logged=0; /* Re-initialize the variable at 0 to simulate the logout */
+				//user->logged=0; /* Re-initialize the variable at 0 to simulate the logout */
 				exit(0);
 			
 			case -1:	/* Error */

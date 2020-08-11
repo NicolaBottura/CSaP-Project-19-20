@@ -1,22 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-int COUNT=0;
-
-#define TEST	0
+#include <string.h>
 
 typedef struct test {
 	int id;
+	char nome[20];
 } testing;
-testing test1[10];
+testing *test1;
+
+int count;
 
 int main()
 {
-	TEST=1;
-	printf("%d\n", test1[COUNT].id);
-	COUNT+=1;
-	test1[COUNT].id=COUNT;
-	printf("%d\n", test1[COUNT].id);
+	count++;
+	test1=realloc(test1, sizeof *test1);
+	test1[count].id=3;
+	strcpy(test1[count].nome, "Nicola");
 
-	return 0;
+	count++;
+	test1[count].id=55;
+	strcpy(test1[count].nome, "Giorgia");
+
+	count++;
+	test1[count].id=109;
+	strcpy(test1[count].nome, "Thanos");
+
+	for(int j=1; j<=count; j++)
+		printf("%s\n", test1[j].nome);
 }

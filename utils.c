@@ -27,6 +27,7 @@ char *pong(int client_socket, char *message)
 	int msg_len, bytesreceived;
 
 	msg_len = strlen(message);
+	memset(buff, 0, sizeof(buff));
 
 	//printf("[3] I'm pong() with message = %s\n", message); // MESSAGGIO DI CONTROLLO - ELIMINARE
 

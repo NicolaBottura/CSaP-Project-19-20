@@ -28,6 +28,6 @@ Note: 	use processes (not threads) and SYSV IPCs (not POSIX).
 	4. status [message#] -> displays the status of a specific message
 	5. reply [message#] -> appends a new message to a thread (in a topic)
 	6. create [topic] -> creates a new topic (the user will be the owner)
-	7. appen [topic] [thread] -> appends a (new) message to a new thread in a topic
+	7. append [topic] [thread] -> appends a (new) message to a new thread in a topic
 	8. subscribe [topic] -> insert the user in the list of recipients for this topic
 	9. delete [topic] -> only if owner of the topic, deletes the topic and all messages

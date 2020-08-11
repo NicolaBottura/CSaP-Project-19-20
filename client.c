@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 {
 	unsigned short server_port;
 	char *server_ip;
-	int sfd;
+	int sfd, ID;
 	struct sockaddr_in saddr;
 
 	if(argc != 3)
@@ -35,6 +35,11 @@ int main(int argc, char *argv[])
 	communication(sfd); /* Password exchange */
 	communication(sfd); /* Login Response exchange */
 	
+
+	communication(sfd); /* Topic Name */
+	communication(sfd); /* Topic Content */
+	communication(sfd); /* List the topics */
+
 	close(sfd); /* Close the connection and destroy the socket */
 	exit(0);
 }
@@ -53,13 +58,13 @@ void communication(int sfd)
 	printf("%s\n", response);
 
 	/* Checks during login if I failed it, if yes, exit */
-	if((strcmp(response, "Login Failed!") == 0) && (user->logged == 0))
+	if(strcmp(response, "Login Failed!") == 0)  //&& (user->logged == 0))
 	{
 		close(sfd);
 		exit(0);
 	}
 
-	scanf("%s", input);
+	fgets(input, BUFFSIZE, stdin);
 
 	if((send(sfd, input, sizeof(input), 0)) < 0)
 		DieWithError("send() failed\n");
