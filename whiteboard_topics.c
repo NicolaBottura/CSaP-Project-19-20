@@ -4,7 +4,7 @@
 	Function used to create a topic, asking the client for the fields needed to complete the elements in the struct.
 		Uses the function pong() defined in utils.c to send and receive the proper fields.
 */
-int create_topics(int client_socket)
+int create_topics(int client_socket, int current_id)
 {
 	FILE *fd;
 
@@ -15,7 +15,7 @@ int create_topics(int client_socket)
 		DieWithError("open() failed\n");
 
 	//IF (SIZEOF(FILE) + SIZEOF(NAME) + SIZEOF(CONTENT) > N) ESCI
-	fprintf(fd, "Topic #\t Creator: %s\nName: %sContent: %s\n", user->username, topic->name, topic->content);
+	fprintf(fd, "Topic #\t Creator: %s\nName: %sContent: %s\n", user[current_id].username, topic->name, topic->content);
 
 	fclose(fd);
 
@@ -38,7 +38,6 @@ int list_topics(int client_socket)
 	strcat(ret_string, "\nPress ENTER to return the menu\n");
 
 	pong(client_socket, ret_string);
-
 
 	fclose(fd);
 

@@ -32,8 +32,11 @@ char buff[BUFFSIZE];
 #define SHMPERM 0600
 #define SHMKEY_A 0x12345
 #define SHMKEY_T 0x54321
+#define SHMKEY_C 0x22222
 int shmid_auth;
 int shmid_topics;
+int shmid_counter;
+
 // RICORDA DI DEFINIRE LA SIZE DELLA SHM = SIZEOF(STRUCT)
 
 /* Stuff for semaphores creation/management - whiteboard_sem.c */
@@ -55,9 +58,11 @@ typedef struct authentication {
 	char username[AUTHLEN];
 	char password[AUTHLEN];
 	int logged;		/* 1 = Logged - 0 = Not logged */
-	int usrid;		/* ID of the user when connecting to the server */
+	int usrid;		/* ID of the user when connecting to the server based on id_counter defined below */
+	int pid;		/* PID of the process that is managing the client */
 } auth_user;
 auth_user *user;
+int *id_counter;	/* Counter defined in shared memory used to know the number of clients that have successfully logged in */
 
 /* Stuff for the topics - whiteboard_topics.c */
 #define NAMELEN 10
@@ -84,5 +89,5 @@ char *pong(int client_socket, char *message);
 int create_socket(unsigned short port);
 int accept_connection(int server_socket);
 int authentication(int client_socket);
-int create_topics(int client_socket);
+int create_topics(int client_socket, int current_id);
 int list_topics(int client_socket);

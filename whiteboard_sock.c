@@ -20,7 +20,7 @@ int create_socket(unsigned short port)
 	if((listen(sfd, MAXPENDING)) < 0)	/* Make the server listen on the socket accepting incoming connection until it reaches the queue limit */
 		DieWithError("listen() failed\n");
 
-	printf("[1] I'm in create_socket()\n\n");	/* Check msg */
+	//printf("[1] I'm in create_socket()\n\n");	/* Check msg */
 
 	return sfd;
 }
@@ -37,7 +37,7 @@ int accept_connection(int server_socket)
 	if((client_socket=accept(server_socket, (struct sockaddr *)&caddr, &len)) < 0)
 		DieWithError("accept() failed\n");
 
-	printf("[2] I'm in accept_connection()\n\n");	/* Check msg */
+	//printf("[2] I'm in accept_connection()\n\n");	/* Check msg */
 
 	printf("Handling client %s\n", inet_ntoa(caddr.sin_addr));
 
