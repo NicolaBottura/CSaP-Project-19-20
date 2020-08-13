@@ -1,17 +1,1 @@
 
-Topic #	 Creator: admin
-Name: test1
-Content: test1 asasasasasassa
-
-Topic #	 Creator: ciao
-Name: test2
-Content: asdadasdadadads
-
-Topic #	 Creator: pass
-Name: asdasads
-Content: asdadsadsads
-
-Topic #	 Creator: admin
-Name: asdas
-Content: daasd
-

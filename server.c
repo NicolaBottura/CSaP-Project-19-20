@@ -1,5 +1,7 @@
 #include "whiteboard.h"
 
+int getcurrentid();
+
 int main(int argc, char *argv[])
 {
 	unsigned short port;	/* Port on which the Server listen */
@@ -42,13 +44,13 @@ int main(int argc, char *argv[])
 
 				v(0);		/* sem+1 */
 
+				printf("id: %d\n", *id_counter);
+				
 				switch(operation)	/* Switch-case based on the choice of the client */
 				{
 					case 1:
 					{
-						for(int j=0; j<*id_counter; j++)		/* Get the ID of the client on which I want to do an operation */
-							if(user[j].pid == getpid())	
-								current_id = user[j].usrid;
+						current_id=getcurrentid();
 
 						create_topics(client_socket, current_id);	/* Create a new topic */
 						break;
@@ -83,4 +85,15 @@ int main(int argc, char *argv[])
 	}
 
 	return 0; /* Never reaches this section so I don't even write the close(server_sorcket) here */
+}
+
+/* 
+	Function that returns the ID of the client on which I want to do an operation.
+		This is possible by checking the PID of the process that invokes this function.
+*/
+int getcurrentid()
+{
+	for(int j=0; j<*id_counter; j++)		
+		if(user[j].pid == getpid())	
+			return user[j].usrid;
 }
