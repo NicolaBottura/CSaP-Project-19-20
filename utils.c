@@ -36,14 +36,15 @@ char *pong(int client_socket, char *message, int reponse_len)
 
 	if((bytesreceived=recv(client_socket, buff, sizeof(buff), 0)) < 0)
 		DieWithError("recv() failed\n");
+	
+	buff[bytesreceived]='\0';
 
 	if(strlen(buff) > reponse_len)		/* +1 because there is the \n at the end */
 	{
-		v(0);	// PROVVISORIO: se muoio qui devo sbloccare il semaforo
+		printf("sizeof: %d\n", strlen(buff));
+		v(SEMAUTH);	// PROVVISORIO: se muoio qui devo sbloccare il semaforo
 		DieWithError("Length of the message received higher than that requested size\n");
 	}
-
-	buff[bytesreceived]='\0'; 	//TEST -> METTILO SOPRA IL CHECK DELLA LEN
 	
 	//printf("Received: %s\n", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE
 	

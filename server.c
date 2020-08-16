@@ -6,7 +6,8 @@ int getcurrentid();
 int main(int argc, char *argv[])
 {
 	unsigned short port;	/* Port on which the Server listen */
-	int child_counter=0;	/* Child processes counter */
+	int child_counter=0,	/* Child processes counter */
+	semvals[NUMSEM];		/* Array to manage semaphores */
 	pid_t pid;				/* Variable to store return value of fork() */
 
 	if(argc != 2)
@@ -15,10 +16,13 @@ int main(int argc, char *argv[])
 	if(signal(SIGINT, sigint) < 0)			/* If ctrl+c while running it calls an handler defined in utils.c*/
 		DieWithError("signal() failed\n");
 
+	semvals[SEMAUTH] = 1;
+	semvals[SEMTOPICS] = 1;
+
 	if(get_sem(SEMPERM | IPC_CREAT) < 0)
 		DieWithError("get_sem() failed\n");
-
-	if(init_sem() < 0)
+	
+	if(init_sem(semvals) < 0)
 		DieWithError("init_sem() failed\n");
 
 	if(init_shm(SHMPERM | IPC_CREAT) < 0)	/* Initialize the shared memory portion */
@@ -37,13 +41,11 @@ int main(int argc, char *argv[])
 		{
 			case 0:		/* CHILD */
 			{
-				p(0);		/* sem-1 for AUTH */
-
+				p(SEMAUTH);		/* sem-1 for AUTH */
 				authentication(client_socket); /* Send the authentication form and if the login is successful, send the menu */
-
-				v(0);		/* sem+1 for AUTH */
+				v(SEMAUTH);		/* sem+1 for AUTH */
 				
-				serve_the_client();
+				serve_the_client();		/* Print the MENU and manage the operations called by the clients */
 
 				//user->logged=0; /* Re-initialize the variable at 0 to simulate the logout */
 				exit(0);
@@ -72,7 +74,7 @@ int main(int argc, char *argv[])
 
 int serve_the_client()
 {
-	int operation=0,									/* Operation that the client will chose from the MENU */
+	int operation=0,								/* Operation that the client will chose from the MENU */
 	current_id=0;										/* ID of the client on which I want to do an operation */;
 	char op[ANSSIZE];
 
@@ -85,22 +87,22 @@ int serve_the_client()
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
 				DieWithError("getcurrentid() failed\n");
-
-			create_topics(client_socket, current_id);	/* Create a new topic - whiteboard_topics.c */
 			
+			p(SEMTOPICS);
+			create_topics(client_socket, current_id);	/* Create a new topic - whiteboard_topics.c */
+			v(SEMTOPICS);
+
 			serve_the_client();							/* Repeat this function to make the client execute another operation */
-			break;
 		}
 		case 2:
 		{
 			list_topics(client_socket);					/* list all the topics */	
 
 			serve_the_client();							/* Repeat this function to make the client execute another operation */
-			break;
 		}
 		case 0:
 		{	
-			pong(client_socket, "Exiting the progrma\nBYE!", 0);
+			pong(client_socket, "Exiting the program\nBYE!", 0);
 			close(client_socket);
 			exit(0);	
 		}

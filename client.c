@@ -66,7 +66,7 @@ void communication(int sfd)
 	printf("%s\n", response);
 
 	/* Checks during login if I failed it, if yes, exit */
-	if((strcmp(response, "Login Failed!") == 0) || (strcmp(response, "Exiting the progrma\nBYE!") == 0))
+	if((strcmp(response, "Login Failed!") == 0) || (strcmp(response, "Exiting the program\nBYE!") == 0))
 	{
 		close(sfd);
 		exit(0);

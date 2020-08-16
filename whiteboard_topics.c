@@ -24,22 +24,32 @@ int create_topics(int client_socket, int current_id)
 	return 0;
 }
 
+/*
+	Function that lists the content of the file in which the topics are stored.
+*/
 int list_topics(int client_socket)
 {
 	FILE *fd;
-	int nbytes=0;
-	char tmp[BUFFSIZE], ret_string[BUFFSIZE];
-;
+	int nbytes=0, size;
+	char tmp[]="\nPress ENTER to continue", 
+	*ret_string;
+	struct stat st;
 
-	if((fd=fopen(TOPICSDB, "r")) < 0)
+	if((fd=fopen(TOPICSDB, "r")) < 0)								/* Open the file */
 		DieWithError("open() failed\n");
 
-	// FARE LA READ DAL FILE
+	if(stat(TOPICSDB, &st) == 0)									/* Get the total length of the file */
+		size=st.st_size;
 
-	strcpy(ret_string, tmp);
-	strcat(ret_string, "\nPress ENTER to return the menu\n");
+	ret_string=(char *)malloc(size);
+	
+	while((nbytes=fread(ret_string, sizeof(char), size, fd)) > 0)	/* Read from the file and store the content in a buffer */
+		continue;
 
-//	pong(client_socket, ret_string);
+	ret_string=realloc(ret_string, size+sizeof(tmp));				/* Update the size of the return string */
+	strcat(ret_string, tmp);										/* Append a new string at the end of the buffer */
+
+	pong(client_socket, ret_string, ANSSIZE);						/* Send the message to the client */
 
 	fclose(fd);
 

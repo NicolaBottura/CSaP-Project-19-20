@@ -44,8 +44,9 @@ int shmid_counter;
 /* Stuff for semaphores creation/management - whiteboard_sem.c */
 #define SEMPERM 0600
 #define SEMKEY 0x11111
-#define AUTH_CS 1
-#define NUMSEM 1	// METTERE A POSTO
+#define SEMAUTH 0
+#define SEMTOPICS 1
+#define NUMSEM 2	// METTERE A POSTO
 int semid;
 
 /* Both used only in server.c */
@@ -83,7 +84,7 @@ void sigint(int signal);
 int init_shm(int perms);
 int remove_shm();
 int get_sem(int perms);
-int init_sem();
+int init_sem(int semvals[]);
 int remove_sem();
 int p(int semnum);
 int v(int semnum);
