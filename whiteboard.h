@@ -12,11 +12,13 @@
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <time.h>
 
 #define BUFFSIZE 256
 
 /* Stuff for files in utils.c */
 char buff[BUFFSIZE];
+#define ANSSIZE 2
 #define MENU "****** WHITEBOARD MENU ******\n \
 1) Create a topic\n \
 2) List the topics\n \
@@ -65,7 +67,7 @@ auth_user *user;
 int *id_counter;	/* Counter defined in shared memory used to know the number of clients that have successfully logged in */
 
 /* Stuff for the topics - whiteboard_topics.c */
-#define NAMELEN 10
+#define NAMELEN 20
 #define CONTENTLEN 100
 #define TOPICSDB "topics.txt"
 typedef struct topics_str {
@@ -85,7 +87,7 @@ int init_sem();
 int remove_sem();
 int p(int semnum);
 int v(int semnum);
-char *pong(int client_socket, char *message);
+char *pong(int client_socket, char *message, int response_len);
 int create_socket(unsigned short port);
 int accept_connection(int server_socket);
 int authentication(int client_socket);

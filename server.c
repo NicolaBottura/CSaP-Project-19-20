@@ -1,14 +1,16 @@
 #include "whiteboard.h"
 
+int serve_the_client();
 int getcurrentid();
 
 int main(int argc, char *argv[])
 {
 	unsigned short port;	/* Port on which the Server listen */
-	int child_counter=0,	/* Child processes counter */
-	operation,				/* Operation chosen froim the MENU by the client after authentication */
-	current_id=0;			/* ID of the client on which I want to do an operation */
+	int child_counter=0;	/* Child processes counter */
 	pid_t pid;				/* Variable to store return value of fork() */
+
+	if(argc != 2)
+		DieWithError("Usage: ./server <listening-port>\n");
 
 	if(signal(SIGINT, sigint) < 0)			/* If ctrl+c while running it calls an handler defined in utils.c*/
 		DieWithError("signal() failed\n");
@@ -35,32 +37,13 @@ int main(int argc, char *argv[])
 		{
 			case 0:		/* CHILD */
 			{
-				p(0);		/* sem-1 */
+				p(0);		/* sem-1 for AUTH */
 
 				authentication(client_socket); /* Send the authentication form and if the login is successful, send the menu */
 
-				operation = strtol(buff, NULL, 0); /* Convert the client's answer in integer, which is stored in buff, the last
-												item seen by the pong() function, which is global and definer in whiteboard.h */
-
-				v(0);		/* sem+1 */
-
-				printf("id: %d\n", *id_counter);
+				v(0);		/* sem+1 for AUTH */
 				
-				switch(operation)	/* Switch-case based on the choice of the client */
-				{
-					case 1:
-					{
-						current_id=getcurrentid();
-
-						create_topics(client_socket, current_id);	/* Create a new topic */
-						break;
-					}
-					case 2:
-					{
-						list_topics(client_socket);		/* list all the topics */
-						break;
-					}
-				}
+				serve_the_client();
 
 				//user->logged=0; /* Re-initialize the variable at 0 to simulate the logout */
 				exit(0);
@@ -87,13 +70,52 @@ int main(int argc, char *argv[])
 	return 0; /* Never reaches this section so I don't even write the close(server_sorcket) here */
 }
 
+int serve_the_client()
+{
+	int operation=0,									/* Operation that the client will chose from the MENU */
+	current_id=0;										/* ID of the client on which I want to do an operation */;
+	char op[ANSSIZE];
+
+	strcpy(op, pong(client_socket, MENU, ANSSIZE));		/* Send the MENU to the client */
+	operation = strtol(op, NULL, 0); 					/* Convert the client's answer in integer */
+
+	switch(operation)									/* Switch-case based on the choice of the client */
+	{
+		case 1:
+		{
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+				DieWithError("getcurrentid() failed\n");
+
+			create_topics(client_socket, current_id);	/* Create a new topic - whiteboard_topics.c */
+			serve_the_client();
+			break;
+		}
+		case 2:
+		{
+			list_topics(client_socket);		/* list all the topics */	
+			serve_the_client();
+
+			break;
+		}
+		case 0:
+		{	
+			pong(client_socket, "Exiting the progrma\nBYE!", 0);
+			close(client_socket);
+			exit(0);	
+		}
+	}
+}
+
 /* 
 	Function that returns the ID of the client on which I want to do an operation.
 		This is possible by checking the PID of the process that invokes this function.
 */
 int getcurrentid()
 {
-	for(int j=0; j<*id_counter; j++)		
-		if(user[j].pid == getpid())	
+	for(int j=0; j<*id_counter; j++){	
+		if(user[j].pid == getpid())
 			return user[j].usrid;
+	}
+
+	return -1;	
 }

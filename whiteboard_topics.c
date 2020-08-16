@@ -7,15 +7,17 @@
 int create_topics(int client_socket, int current_id)
 {
 	FILE *fd;
+	time_t t=time(NULL);
+	struct tm *tm = localtime(&t);
 
-	strcpy(topic->name, pong(client_socket, "### TOPIC CREATION MENU ###\nInsert the topic name: "));
-	strcpy(topic->content, pong(client_socket, "Insert the content of the topic: "));
+	strcpy(topic->name, pong(client_socket, "### TOPIC CREATION MENU ###\nInsert the topic name: ", NAMELEN));
+	strcpy(topic->content, pong(client_socket, "Insert the content of the topic: ", CONTENTLEN));
 
 	if((fd=fopen(TOPICSDB, "a+")) < 0)
 		DieWithError("open() failed\n");
 
-	//IF (SIZEOF(FILE) + SIZEOF(NAME) + SIZEOF(CONTENT) > N) ESCI
-	fprintf(fd, "Topic #\t Creator: %s\nName: %sContent: %s\n", user[current_id].username, topic->name, topic->content);
+	/* Write in the file the fields of the new topic */
+	fprintf(fd, "Name: %sTime: %sCreator: %s\nContent: %s\n", topic->name, asctime(tm), user[current_id].username, topic->content);
 
 	fclose(fd);
 
@@ -37,7 +39,7 @@ int list_topics(int client_socket)
 	strcpy(ret_string, tmp);
 	strcat(ret_string, "\nPress ENTER to return the menu\n");
 
-	pong(client_socket, ret_string);
+//	pong(client_socket, ret_string);
 
 	fclose(fd);
 
