@@ -87,14 +87,15 @@ int serve_the_client()
 				DieWithError("getcurrentid() failed\n");
 
 			create_topics(client_socket, current_id);	/* Create a new topic - whiteboard_topics.c */
-			serve_the_client();
+			
+			serve_the_client();							/* Repeat this function to make the client execute another operation */
 			break;
 		}
 		case 2:
 		{
-			list_topics(client_socket);		/* list all the topics */	
-			serve_the_client();
+			list_topics(client_socket);					/* list all the topics */	
 
+			serve_the_client();							/* Repeat this function to make the client execute another operation */
 			break;
 		}
 		case 0:
