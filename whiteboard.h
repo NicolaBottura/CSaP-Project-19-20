@@ -22,6 +22,7 @@ char buff[BUFFSIZE];
 #define MENU "****** WHITEBOARD MENU ******\n \
 1) Create a topic\n \
 2) List the topics\n \
+3) Delete a topic\n \
 0) Exit\n "
 
 /* Stuff for the Socket creation/management - whiteboard_sock.c */
@@ -103,3 +104,4 @@ int list_topics(int client_socket);
 int load_topics();
 char *send_only(int client_socket, char *message1, char *message2);
 int write_topics();
+int delete_topic(int client_socket, int current_id);

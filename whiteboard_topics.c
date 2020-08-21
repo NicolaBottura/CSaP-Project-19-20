@@ -20,19 +20,19 @@ int load_topics()
 	if(size>1)
 		while((fscanf(fd, "%s %s %s %[^\n]", tmp, username, name, content)) > 0)
 		{
-			id_counter[TOPICCOUNTER] = strtol(tmp, NULL, 0);		/* Increment by 1 the ID */
+			id_counter[TOPICCOUNTER] = strtol(tmp, NULL, 0);
 			topic[id_counter[TOPICCOUNTER]].topicid=id_counter[TOPICCOUNTER];
 			strcpy(topic[id_counter[TOPICCOUNTER]].creator, username);
 			strcpy(topic[id_counter[TOPICCOUNTER]].name, name);
-			strcpy(topic[id_counter[TOPICCOUNTER]].content, content);
+			strcpy(topic[id_counter[TOPICCOUNTER]].content, content);	
 		}
-	else
+	/*else
 	{
 		id_counter[TOPICCOUNTER]=0;
 		fclose(fd);
 		return 0;
 	}
-
+	*/
 	id_counter[TOPICCOUNTER]+=1;
 	
 	fclose(fd);
@@ -48,7 +48,10 @@ int write_topics()
 		DieWithError("open() in write_topics() failed\n");
 	
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
-		fprintf(fd, "%d %s %s %s\n", topic[j].topicid, topic[j].creator, topic[j].name, topic[j].content); 
+	{
+		if(topic[j].topicid > 0)
+			fprintf(fd, "%d %s %s %s\n", topic[j].topicid, topic[j].creator, topic[j].name, topic[j].content); 
+	}
 
 	fclose(fd);
 
@@ -98,15 +101,18 @@ int list_topics(int client_socket)
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 	{
-		memset(ret_string, 0, sizeof(ret_string));
-		strcpy(ret_string, topic[j].creator);
-		strcat(ret_string, tmp);
-		strcat(ret_string, topic[j].name);
-		strcat(ret_string, tmp);
-		strcat(ret_string, topic[j].content);
-		strcat(ret_string, tmp);
-		strcat(ret_string, tmp);
-		send(client_socket, ret_string, strlen(ret_string), 0);
+		if(topic[j].topicid > 0)
+		{
+			memset(ret_string, 0, sizeof(ret_string));		// Aggiungi l'ID the topic
+			strcpy(ret_string, topic[j].creator);
+			strcat(ret_string, tmp);
+			strcat(ret_string, topic[j].name);
+			strcat(ret_string, tmp);
+			strcat(ret_string, topic[j].content);
+			strcat(ret_string, tmp);
+			strcat(ret_string, tmp);
+			send(client_socket, ret_string, strlen(ret_string), 0);
+		}
 	}
 	
 	pong(client_socket, "Press ENTER to continue", ANSSIZE);
@@ -132,5 +138,29 @@ int list_topics(int client_socket)
 	
 	//fclose(fd);
 
+	return 0;
+}
+
+/*
+	The client choose the ID of a topic and then the server will delete it only if the client
+		is also the owner of the topic.
+*/
+int delete_topic(int client_socket, int current_id)
+{
+	char id_st[ANSSIZE];
+	int id;
+
+	strcpy(id_st, pong(client_socket, "Choose the topic ID: ", ANSSIZE));
+	id=strtol(id_st, NULL, 0);
+
+	if(strcmp(user[current_id].username, topic[id].creator) == 0)
+	{
+		memset(topic[id].creator, 0, sizeof(topic[id].creator));
+		memset(topic[id].name, 0, sizeof(topic[id].name));
+		memset(topic[id].content, 0, sizeof(topic[id].content));
+		topic[id].topicid = -1;
+	}
+	//Rispondi al client?
+	
 	return 0;
 }

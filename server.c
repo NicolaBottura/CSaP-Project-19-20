@@ -108,7 +108,9 @@ int serve_the_client()
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
 				DieWithError("getcurrentid() failed\n");
 
-			
+			delete_topic(client_socket, current_id);
+
+			serve_the_client(client_socket, current_id); //NOTA: faccio senza passare client_socket perche' e' global
 		}
 		case 0:
 		{	
