@@ -8,6 +8,7 @@ void DieWithError(char *message)
 
 void sigint(int signal)
 {
+	write_topics();
 	remove_shm();
 	remove_sem();
 	close(server_socket);
@@ -28,7 +29,6 @@ char *pong(int client_socket, char *message, int reponse_len)
 
 	msg_len = strlen(message);
 	memset(buff, 0, sizeof(buff));
-
 	//printf("[3] I'm pong() with message = %s\n", message); // MESSAGGIO DI CONTROLLO - ELIMINARE
 
 	if((send(client_socket, message, msg_len, 0)) != msg_len)
@@ -41,12 +41,18 @@ char *pong(int client_socket, char *message, int reponse_len)
 
 	if(strlen(buff) > reponse_len)		/* +1 because there is the \n at the end */
 	{
-		printf("sizeof: %d\n", strlen(buff));
 		v(SEMAUTH);	// PROVVISORIO: se muoio qui devo sbloccare il semaforo
 		DieWithError("Length of the message received higher than that requested size\n");
 	}
-	
+
 	//printf("Received: %s\n", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE
 	
 	return buff;
+}
+
+char *send_only(int client_socket, char *message1, char *message2)
+{
+	strcat(message1, message2);
+
+	send(client_socket, message1, strlen(message1), 0);
 }

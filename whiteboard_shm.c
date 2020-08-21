@@ -5,7 +5,7 @@
 int init_shm(int perms)
 {
 	/* Shared memory for both structures and an id counter for the clients */
-	if((shmid_counter=shmget(SHMKEY_C, sizeof(int), perms)) < 0)
+	if((shmid_counter=shmget(SHMKEY_C, sizeof(int *), perms)) < 0)
 		DieWithError("shmget()#1 failed\n");
 	if((shmid_auth=shmget(SHMKEY_A, SIZE, perms)) < 0)
 		DieWithError("shmget()#2 failed\n");

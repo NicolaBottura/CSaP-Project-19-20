@@ -38,6 +38,8 @@ char buff[BUFFSIZE];
 int shmid_auth;
 int shmid_topics;
 int shmid_counter;
+#define AUTHCOUNTER 0		/* id_counter[AUTHCOUNTER] */
+#define TOPICCOUNTER 1		/* id_counter[TOPICCOUNTER] */
 
 // RICORDA DI DEFINIRE LA SIZE DELLA SHM = SIZEOF(STRUCT)
 
@@ -72,9 +74,13 @@ int *id_counter;	/* Counter defined in shared memory used to know the number of 
 #define CONTENTLEN 100
 #define TOPICSDB "topics.txt"
 typedef struct topics_str {
+	int topicid;
 	char name[NAMELEN];
 	char content[CONTENTLEN];
 	char creator[AUTHLEN]; 		/* Creator of the topic = user creating this topic */
+	char messages[1000];
+	int messageid;
+	char msg_creator[AUTHLEN];
 } topics;
 topics *topic;
 
@@ -94,3 +100,6 @@ int accept_connection(int server_socket);
 int authentication(int client_socket);
 int create_topics(int client_socket, int current_id);
 int list_topics(int client_socket);
+int load_topics();
+char *send_only(int client_socket, char *message1, char *message2);
+int write_topics();

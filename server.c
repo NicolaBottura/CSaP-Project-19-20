@@ -7,8 +7,10 @@ int main(int argc, char *argv[])
 {
 	unsigned short port;	/* Port on which the Server listen */
 	int child_counter=0,	/* Child processes counter */
-	semvals[NUMSEM];		/* Array to manage semaphores */
+	semvals[NUMSEM],		/* Array to manage semaphores */
+	topic_file_size;
 	pid_t pid;				/* Variable to store return value of fork() */
+	FILE *fd;
 
 	if(argc != 2)
 		DieWithError("Usage: ./server <listening-port>\n");
@@ -31,12 +33,13 @@ int main(int argc, char *argv[])
 	port=atoi(argv[1]);						/* Get the port passed we the server program is launched */
 	server_socket=create_socket(port); 		/* Create the socket for communiations with clients */
 
-	*id_counter=0;							/* Set the value of the id_counter(which is global and in shm) to 0 */
-
+	id_counter[AUTHCOUNTER]=0;							/* Set the value of the id_counter(which is global and in shm) to 0 */
+	load_topics();
+	
 	for(;;)	/* Run forever */
 	{
 		client_socket=accept_connection(server_socket);
-
+		
 		switch(pid=fork())
 		{
 			case 0:		/* CHILD */
@@ -83,7 +86,7 @@ int serve_the_client()
 
 	switch(operation)									/* Switch-case based on the choice of the client */
 	{
-		case 1:
+		case 1:											/* Create a new topic */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
 				DieWithError("getcurrentid() failed\n");
@@ -94,11 +97,18 @@ int serve_the_client()
 
 			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
-		case 2:
+		case 2:											/* List all the topics */
 		{
 			list_topics(client_socket);					/* list all the topics */	
 
 			serve_the_client();							/* Repeat this function to make the client execute another operation */
+		}
+		case 3:											/* Delete a topic */
+		{
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+				DieWithError("getcurrentid() failed\n");
+
+			
 		}
 		case 0:
 		{	
@@ -115,7 +125,7 @@ int serve_the_client()
 */
 int getcurrentid()
 {
-	for(int j=0; j<*id_counter; j++){	
+	for(int j=0; j<id_counter[AUTHCOUNTER]; j++){	
 		if(user[j].pid == getpid())
 			return user[j].usrid;
 	}

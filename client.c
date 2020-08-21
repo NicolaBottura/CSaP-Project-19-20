@@ -30,23 +30,11 @@ int main(int argc, char *argv[])
 	if((connect(sfd, (struct sockaddr *)&saddr, sizeof(saddr))) < 0)
 		DieWithError("connect() failed\n");
 
-	
-	communication(sfd); /* Username exchange */
-	communication(sfd); /* Password exchange */
-	communication(sfd); /* Login Response exchange */
-	
+	for(;;)
+	{
+		communication(sfd); /* Username exchange */
+	}
 
-	communication(sfd); /* Topic Name */
-	communication(sfd); /* Topic Content */
-	communication(sfd); /* List the topics */
-
-	communication(sfd); /* Topic Name */
-	communication(sfd); /* Topic Content */
-	communication(sfd); /* List the topics */
-
-	communication(sfd); /* Topic Name */
-	communication(sfd); /* Topic Content */
-	communication(sfd); /* List the topics */
 
 	close(sfd); /* Close the connection and destroy the socket */
 	exit(0);
@@ -56,14 +44,14 @@ int main(int argc, char *argv[])
 void communication(int sfd)
 {
 	int bytereceived=0;
-	char response[BUFFSIZE], input[BUFFSIZE];
+	char response[1000], input[BUFFSIZE];		/* IMPORTANTE -> CAMBIA SIZE */
 
 	memset(response, 0, sizeof(response));
 	if((bytereceived=recv(sfd, response, sizeof(response)-1, 0)) <= 0)
 		DieWithError("recv() failed\n");
 
 	response[bytereceived]='\0';
-	printf("%s\n", response);
+	fprintf(stdout, "%s", response);
 
 	/* Checks during login if I failed it, if yes, exit */
 	if((strcmp(response, "Login Failed!") == 0) || (strcmp(response, "Exiting the program\nBYE!") == 0))

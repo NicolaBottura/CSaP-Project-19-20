@@ -2,13 +2,12 @@
 
 int main()
 {
-	int len=0, size=0;
-	char buff[256];
+	char buff[100];
+	char s1[] = "test#1\n";
+	char s2[] = "Ciao mi chiamo Nicola\n";
 
-	strcpy(buff, "1");
-	len=strlen(buff);
-	size=sizeof(buff);
-	printf("len=%d, size=%d\n", len, size);
+	strcat(s1, s2);
+	printf("%s\n", s1);
 
 	return 0;
 }
