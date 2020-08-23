@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>      /* for printf() and fprintf() */
 #include <sys/socket.h> /* for socket(), connect(), send(), and recv() */
 #include <arpa/inet.h>  /* for sockaddr_in and inet_addr() */
@@ -18,11 +19,12 @@
 
 /* Stuff for files in utils.c */
 char buff[BUFFSIZE];
-#define ANSSIZE 2
+#define ANSSIZE 3	/* Max size of certain client's answers will be a double digit numer + \n */
 #define MENU "****** WHITEBOARD MENU ******\n \
 1) Create a topic\n \
 2) List the topics\n \
 3) Delete a topic\n \
+4) Reply\n \
 0) Exit\n "
 
 /* Stuff for the Socket creation/management - whiteboard_sock.c */
@@ -113,7 +115,8 @@ int authentication(int client_socket);
 int create_topics(int client_socket, int current_id);
 int list_topics(int client_socket);
 int load_topics();
-char *send_only(int client_socket, char *message1, char *message2);
 int write_topics();
 int delete_topic(int client_socket, int current_id);
+int load_messages();
+int write_messages();
 int reply(int client_socket, int current_id);

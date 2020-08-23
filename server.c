@@ -35,7 +35,8 @@ int main(int argc, char *argv[])
 
 	id_counter[AUTHCOUNTER]=0;				/* Set the value of the id_counter(which is global and in shm) to 0 */
 	load_topics();							/* Load all the topics from file */
-	
+	load_messages();						/* Load all the messagtes from file */
+
 	for(;;)	/* Run forever */
 	{
 		client_socket=accept_connection(server_socket);
@@ -118,6 +119,7 @@ int serve_the_client()
 				DieWithError("getcurrentid() failed\n");
 
 			reply(client_socket, current_id);
+
 			serve_the_client();
 		}
 		case 0:

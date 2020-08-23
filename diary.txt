@@ -1,0 +1,9 @@
+23/08/2020
+
+MESSAGGI -> Scrivere messaggi relativi ad un topic.	
+	Il client da in risposta alla richiesta del server l'ID del topic a cui vuole appendere un messaggio, il serve lo prende, controlla che quell'ID esista e risponde chiedendo il contenuto del messaggio salvandolo nella struct insieme all'ID del topic e al creatore del commento.
+Funzione reply(); in whiteboard_topics.c.
+
+> NOTE: aggiungere l'ID del topic quando viene listato
+	controllare che quando muore il programma mi scrive comunque topics/messaggi nei file; in alternativa, sovrascrivo dentro al file ogni volta che ne creo o cancello uno
+	semaforo da fixare quando muore un client mentre fa un operazione per i topic - manca la v(semtopics)

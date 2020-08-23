@@ -31,8 +31,9 @@ int load_topics()
 		id_counter[TOPICCOUNTER]=0;
 		fclose(fd);
 		return 0;
-	}
-	*/
+	}*/			// mezzo problema, il mio primo topic(quando parto da file vuoto) e' sempre al posto 1, non 0
+
+	
 	id_counter[TOPICCOUNTER]+=1;
 	
 	fclose(fd);
@@ -44,12 +45,12 @@ int write_topics()
 {
 	FILE *fd;
 	
-	if((fd=fopen(TOPICSDB, "w")) < 0)
+	if((fd=fopen(TOPICSDB, "w")) < 0)		/* Open the file and overwrite the content with the new one */
 		DieWithError("open() in write_topics() failed\n");
 	
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 	{
-		if(topic[j].topicid > 0)
+		if(topic[j].topicid > 0)	/* Check that the topics exists - if not, the id is = -1 */
 			fprintf(fd, "%d %s %s %s\n", topic[j].topicid, topic[j].creator, topic[j].name, topic[j].content); 
 	}
 
@@ -79,6 +80,9 @@ int create_topics(int client_socket, int current_id)
 	//if((fd=fopen(TOPICSDB, "a+")) < 0)
 	//	DieWithError("open() failed\n");
 	id_counter[TOPICCOUNTER]+=1;
+	
+	pong(client_socket, "Topic created!\nPress ENTER to continue", ANSSIZE);
+
 	/* Write in the file the fields of the new topic */
 	//fprintf(fd, "%d %s %s %s\n", id_counter[TOPICCOUNTER], user[current_id].username, topic->name, topic->content); //asctime(tm) to print the current time
 	//id_counter[TOPICCOUNTER]+=1;
@@ -97,51 +101,24 @@ int create_topics(int client_socket, int current_id)
 */
 int list_topics(int client_socket)
 {
-	//FILE *fd;
-	//int nbytes=0, size;
-	char tmp[]="\n";
-	char ret_string[1000];
+	char *res;
 	struct stat st;
-	int namelen, contentlen;
+	int namelen, contentlen, size;
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 	{
-		if(topic[j].topicid > 0)
+		if(topic[j].topicid > 0)	/* Check that the topics exists - if not, the id is = -1 */
 		{
-			memset(ret_string, 0, sizeof(ret_string));		// Aggiungi l'ID the topic
-			strcpy(ret_string, topic[j].creator);
-			strcat(ret_string, tmp);
-			strcat(ret_string, topic[j].name);
-			strcat(ret_string, tmp);
-			strcat(ret_string, topic[j].content);
-			strcat(ret_string, tmp);
-			strcat(ret_string, tmp);
-			send(client_socket, ret_string, strlen(ret_string), 0);
+			size=asprintf(&res, "ID: %d\nCreator: %s\nTopic Name: %s\nContent: %s\n\n", \
+				topic[j].topicid, topic[j].creator, topic[j].name, topic[j].content);
+
+			send(client_socket, res, size, 0);
 		}
 	}
 	
 	ping(client_socket, "Press ENTER to continue", ANSSIZE);
-	//if((fd=fopen(TOPICSDB, "r")) < 0)								/* Open the file */
-	//	DieWithError("open() failed\n");
 
-	//if(stat(TOPICSDB, &st) == 0)									/* Get the total length of the file */
-	//	size=st.st_size;
-	/*
-	if(size > 1)
-	{
-		ret_string=(char *)malloc(size+strlen(tmp));
-	
-		while((nbytes=fread(ret_string, sizeof(char), size, fd)) > 0)	/* Read from the file and store the content in a buffer */
-	//		continue;
-
-		//ret_string=realloc(ret_string, size+sizeof(tmp));				/* Update the size of the return string */
-	//	strcat(ret_string, tmp);										/* Append a new string at the end of the buffer */
-	//	pong(client_socket, ret_string, ANSSIZE);						/* Send the message to the client */
-	//}
-	//else
-	//	pong(client_socket, "Topic file is empty!", ANSSIZE);
-	
-	//fclose(fd);
+	free(res);
 
 	return 0;
 }
@@ -152,7 +129,8 @@ int list_topics(int client_socket)
 */
 int delete_topic(int client_socket, int current_id)
 {
-	char id_char[ANSSIZE];
+	char id_char[ANSSIZE],
+	res[] = "Topic deleted!\n";
 	int id;
 
 	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to DELETE: ", ANSSIZE));
@@ -164,45 +142,12 @@ int delete_topic(int client_socket, int current_id)
 		memset(topic[id].name, 0, sizeof(topic[id].name));
 		memset(topic[id].content, 0, sizeof(topic[id].content));
 		topic[id].topicid = -1;
+		ping(client_socket, "Topic deleted!\nPress ENTER to continue", ANSSIZE);
 	}
-	//Rispondi al client?
+	else if(id >= id_counter[TOPICCOUNTER])
+		ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
+	else    /* Tell the client that he is not the owner of the topics he's trying to delete */
+		ping(client_socket, "You're not the owner of this topic!\nPress ENTER to continue", ANSSIZE);
 	
-	return 0;
-}
-
-/* 
-	Append a new message to a topic.
-		Ask the client which topic he wants to reply to(asking the ID) and
-			create a new instance of an array of struct of messages with inside the ID of the topic.
-*/
-int reply(int client_socket, int current_id)
-{
-	/*
-		typedef struct messages {
-		int topic_id;	// cambia nome
-		char msg_content[MSGLEN];
-		// STATUS
-		char msg_creator[AUTHLEN];
-		} msg;
-		msg *message;
-	*/
-	char id_char[ANSSIZE];
-	int id;
-	char failed[] = "Wrong topic ID!";
-
-	strcpy(id_char, ping(client_socket, "Choose the topic ID on which you want to REPLY: ", ANSSIZE));
-	id=strtol(id_char, NULL, 0);
-	/* da fixare */
-	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
-		if(id != topic[j].topicid && j==id_counter[TOPICCOUNTER]-1)
-		{
-			send(client_socket, failed, strlen(failed), 0);
-			return 0;
-		}	
-
-	message[id_counter[MSGCOUNTER]].topic_id = id;
-	strcpy(message[id_counter[MSGCOUNTER]].msg_creator, user[current_id].username);
-	strcpy(message[id_counter[MSGCOUNTER]].msg_content, ping(client_socket, "Insert the content of the message: ", MSGLEN));
-
 	return 0;
 }

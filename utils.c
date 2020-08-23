@@ -9,6 +9,7 @@ void DieWithError(char *message)
 void sigint(int signal)
 {
 	write_topics();
+	write_messages();
 	remove_shm();
 	remove_sem();
 	close(server_socket);
