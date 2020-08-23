@@ -20,10 +20,10 @@ void sigint(int signal)
 
 /* Function used to send a message back to the client through the socket 
 	and get back the response by it.
-	Client: ping
-	Server: pong back
+	Server: ping
+	Client: pong back
 */
-char *pong(int client_socket, char *message, int reponse_len)
+char *ping(int client_socket, char *message, int reponse_len)
 {
 	int msg_len, bytesreceived;
 

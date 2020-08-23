@@ -32,17 +32,21 @@ char buff[BUFFSIZE];
 #define MAXPENDING 5
 
 /* Stuff for shared memory creation/management - whiteboard_shm.c */
-#define SHMPERM 0600
-#define SHMKEY_A 0x12345
-#define SHMKEY_T 0x54321
-#define SHMKEY_C 0x22222
+// RICORDA DI DEFINIRE LA SIZE DELLA SHM = SIZEOF(STRUCT)
+#define SHMPERM 0600		/* Perms for the shared memory segments */
+#define SHMKEY_A 0x12345	/* Authentication */
+#define SHMKEY_T 0x54321	/* Topics */
+#define SHMKEY_C 0x22222	/* ID Counter for users and topics */
+#define SHMKEY_M 0x33333	/* Messages */
 int shmid_auth;
 int shmid_topics;
 int shmid_counter;
+int shmid_msg;
+
+/* Fields of the array for the IDs counter */
 #define AUTHCOUNTER 0		/* id_counter[AUTHCOUNTER] */
 #define TOPICCOUNTER 1		/* id_counter[TOPICCOUNTER] */
-
-// RICORDA DI DEFINIRE LA SIZE DELLA SHM = SIZEOF(STRUCT)
+#define MSGCOUNTER 2		/* id_counter[MSGCOUNTER] */
 
 /* Stuff for semaphores creation/management - whiteboard_sem.c */
 #define SEMPERM 0600
@@ -70,20 +74,27 @@ typedef struct authentication {
 auth_user *user;
 int *id_counter;	/* Counter defined in shared memory used to know the number of clients that have successfully logged in */
 
-/* Stuff for the topics - whiteboard_topics.c */
-#define NAMELEN 20
+/* Stuff for the topics and related messages - whiteboard_topics.c */
 #define CONTENTLEN 100
 #define TOPICSDB "topics.txt"
 typedef struct topics_str {
 	int topicid;
-	char name[NAMELEN];
+	char name[AUTHLEN];
 	char content[CONTENTLEN];
 	char creator[AUTHLEN]; 		/* Creator of the topic = user creating this topic */
-	char messages[1000];
-	int messageid;
-	char msg_creator[AUTHLEN];
+	char subscribed[CONTENTLEN];	// Controlla la lunghezza
 } topics;
 topics *topic;
+
+#define MSGLEN 50
+#define MSGDB "messages.txt"
+typedef struct messages {
+	int topic_id;	// cambia nome
+	char msg_content[MSGLEN];
+	// STATUS
+	char msg_creator[AUTHLEN];
+} msg;
+msg *message;
 
 /* Prototypes */
 void DieWithError(char *message);
@@ -95,7 +106,7 @@ int init_sem(int semvals[]);
 int remove_sem();
 int p(int semnum);
 int v(int semnum);
-char *pong(int client_socket, char *message, int response_len);
+char *ping(int client_socket, char *message, int response_len);
 int create_socket(unsigned short port);
 int accept_connection(int server_socket);
 int authentication(int client_socket);
@@ -105,3 +116,4 @@ int load_topics();
 char *send_only(int client_socket, char *message1, char *message2);
 int write_topics();
 int delete_topic(int client_socket, int current_id);
+int reply(int client_socket, int current_id);

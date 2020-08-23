@@ -7,7 +7,7 @@ int load_topics()
 {
 	FILE *fd;
 	struct stat st;
-	char tmp[ANSSIZE], username[AUTHLEN], name[NAMELEN], content[CONTENTLEN];
+	char tmp[ANSSIZE], username[AUTHLEN], name[AUTHLEN], content[CONTENTLEN];
 	int size;
 
 	if((fd=fopen(TOPICSDB, "r")) < 0)
@@ -66,8 +66,8 @@ int create_topics(int client_socket, int current_id)
 	//FILE *fd;
 	int namelen, contentlen;
 
-	strcpy(topic[id_counter[TOPICCOUNTER]].name, pong(client_socket, "### TOPIC CREATION MENU ###\nInsert the topic name: ", NAMELEN));
-	strcpy(topic[id_counter[TOPICCOUNTER]].content, pong(client_socket, "Insert the content of the topic: ", CONTENTLEN));
+	strcpy(topic[id_counter[TOPICCOUNTER]].name, ping(client_socket, "### TOPIC CREATION MENU ###\nInsert the topic name: ", AUTHLEN));
+	strcpy(topic[id_counter[TOPICCOUNTER]].content, ping(client_socket, "Insert the content of the topic: ", CONTENTLEN));
 	strcpy(topic[id_counter[TOPICCOUNTER]].creator, user[current_id].username);
 	topic[id_counter[TOPICCOUNTER]].topicid=id_counter[TOPICCOUNTER];
 	
@@ -86,6 +86,11 @@ int create_topics(int client_socket, int current_id)
 
 	return 0;
 }
+
+//
+//	RICORDA DI METTERE I SEMAFORI
+//	ANCHE PER LE NUOVE FUNZIONALITA'
+//
 
 /*
 	Function that lists the content of the file in which the topics are stored.
@@ -115,7 +120,7 @@ int list_topics(int client_socket)
 		}
 	}
 	
-	pong(client_socket, "Press ENTER to continue", ANSSIZE);
+	ping(client_socket, "Press ENTER to continue", ANSSIZE);
 	//if((fd=fopen(TOPICSDB, "r")) < 0)								/* Open the file */
 	//	DieWithError("open() failed\n");
 
@@ -147,11 +152,11 @@ int list_topics(int client_socket)
 */
 int delete_topic(int client_socket, int current_id)
 {
-	char id_st[ANSSIZE];
+	char id_char[ANSSIZE];
 	int id;
 
-	strcpy(id_st, pong(client_socket, "Choose the topic ID: ", ANSSIZE));
-	id=strtol(id_st, NULL, 0);
+	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to DELETE: ", ANSSIZE));
+	id=strtol(id_char, NULL, 0);
 
 	if(strcmp(user[current_id].username, topic[id].creator) == 0)
 	{
@@ -162,5 +167,42 @@ int delete_topic(int client_socket, int current_id)
 	}
 	//Rispondi al client?
 	
+	return 0;
+}
+
+/* 
+	Append a new message to a topic.
+		Ask the client which topic he wants to reply to(asking the ID) and
+			create a new instance of an array of struct of messages with inside the ID of the topic.
+*/
+int reply(int client_socket, int current_id)
+{
+	/*
+		typedef struct messages {
+		int topic_id;	// cambia nome
+		char msg_content[MSGLEN];
+		// STATUS
+		char msg_creator[AUTHLEN];
+		} msg;
+		msg *message;
+	*/
+	char id_char[ANSSIZE];
+	int id;
+	char failed[] = "Wrong topic ID!";
+
+	strcpy(id_char, ping(client_socket, "Choose the topic ID on which you want to REPLY: ", ANSSIZE));
+	id=strtol(id_char, NULL, 0);
+	/* da fixare */
+	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
+		if(id != topic[j].topicid && j==id_counter[TOPICCOUNTER]-1)
+		{
+			send(client_socket, failed, strlen(failed), 0);
+			return 0;
+		}	
+
+	message[id_counter[MSGCOUNTER]].topic_id = id;
+	strcpy(message[id_counter[MSGCOUNTER]].msg_creator, user[current_id].username);
+	strcpy(message[id_counter[MSGCOUNTER]].msg_content, ping(client_socket, "Insert the content of the message: ", MSGLEN));
+
 	return 0;
 }

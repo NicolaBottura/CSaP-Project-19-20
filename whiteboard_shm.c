@@ -5,12 +5,14 @@
 int init_shm(int perms)
 {
 	/* Shared memory for both structures and an id counter for the clients */
-	if((shmid_counter=shmget(SHMKEY_C, sizeof(int *), perms)) < 0)
+	if((shmid_counter=shmget(SHMKEY_C, 12, perms)) < 0)	/* Size di un array da 3 = 12 - mettere a posto */
 		DieWithError("shmget()#1 failed\n");
 	if((shmid_auth=shmget(SHMKEY_A, SIZE, perms)) < 0)
 		DieWithError("shmget()#2 failed\n");
 	if((shmid_topics=shmget(SHMKEY_T, SIZE, perms)) < 0)
 		DieWithError("shmget()#3 failed\n");
+	if((shmid_msg=shmget(SHMKEY_M, SIZE, perms)) < 0)
+		DieWithError("shmget()#4 failed\n");
 
 	// Definire numero massimo di topics (?)
 	// La struct che controlla il tutto deve essere messa in shared memory
@@ -23,6 +25,8 @@ int init_shm(int perms)
 		DieWithError("shmat()#2 failed\n");
 	if((topic=(topics *)shmat(shmid_topics, NULL, 0)) < 0)
 		DieWithError("shmat()#3 failed\n");
+	if((message=(msg *)shmat(shmid_msg, NULL, 0)) < 0)
+		DieWithError("shmat()#4 failed\n");
 
 	return 0;
 }
@@ -35,12 +39,16 @@ int remove_shm()
 		DieWithError("shmdt() failed\n");
 	if(shmdt(id_counter) < 0) 
 		DieWithError("shmdt() failed\n");
+	if(shmdt(message) < 0)
+		DieWithError("shmdt() failed\n");
 
-	if (shmctl(shmid_auth, IPC_RMID, NULL) < 0)
+	if(shmctl(shmid_auth, IPC_RMID, NULL) < 0)
 		DieWithError("shmctl() failed\n");
-	if (shmctl(shmid_topics, IPC_RMID, NULL) < 0)
+	if(shmctl(shmid_topics, IPC_RMID, NULL) < 0)
 		DieWithError("shmctl() failed\n");
-	if (shmctl(shmid_counter, IPC_RMID, NULL) < 0)
+	if(shmctl(shmid_counter, IPC_RMID, NULL) < 0)
+		DieWithError("shmctl() failed\n");
+	if(shmctl(shmid_msg, IPC_RMID, NULL) < 0)
 		DieWithError("shmctl() failed\n");
 
 	return 0;

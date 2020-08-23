@@ -33,8 +33,8 @@ int main(int argc, char *argv[])
 	port=atoi(argv[1]);						/* Get the port passed we the server program is launched */
 	server_socket=create_socket(port); 		/* Create the socket for communiations with clients */
 
-	id_counter[AUTHCOUNTER]=0;							/* Set the value of the id_counter(which is global and in shm) to 0 */
-	load_topics();
+	id_counter[AUTHCOUNTER]=0;				/* Set the value of the id_counter(which is global and in shm) to 0 */
+	load_topics();							/* Load all the topics from file */
 	
 	for(;;)	/* Run forever */
 	{
@@ -81,14 +81,14 @@ int serve_the_client()
 	current_id=0;										/* ID of the client on which I want to do an operation */;
 	char op[ANSSIZE];
 
-	strcpy(op, pong(client_socket, MENU, ANSSIZE));		/* Send the MENU to the client */
+	strcpy(op, ping(client_socket, MENU, ANSSIZE));		/* Send the MENU to the client */
 	operation = strtol(op, NULL, 0); 					/* Convert the client's answer in integer */
 
 	switch(operation)									/* Switch-case based on the choice of the client */
 	{
 		case 1:											/* Create a new topic */
 		{
-			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+ 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
 				DieWithError("getcurrentid() failed\n");
 			
 			p(SEMTOPICS);
@@ -110,11 +110,19 @@ int serve_the_client()
 
 			delete_topic(client_socket, current_id);
 
-			serve_the_client(client_socket, current_id); //NOTA: faccio senza passare client_socket perche' e' global
+			serve_the_client(); //NOTA: faccio senza passare client_socket perche' e' global
+		}
+		case 4:											/* Reply to a topic(write a message) */
+		{
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+				DieWithError("getcurrentid() failed\n");
+
+			reply(client_socket, current_id);
+			serve_the_client();
 		}
 		case 0:
 		{	
-			pong(client_socket, "Exiting the program\nBYE!", 0);
+			ping(client_socket, "Exiting the program\nBYE!", 0);
 			close(client_socket);
 			exit(0);	
 		}
