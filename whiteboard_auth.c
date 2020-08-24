@@ -23,6 +23,10 @@ int authentication(int client_socket)
 	passlen=strlen(passwd);
 	passwd[passlen-1]=0;
 
+	if(check_if_logged(name) < 0)
+		DieWithError("This user is already logged\n");
+
+
 	if((fd=fopen(CREDFILE, "r")) < 0)	/* Open the file in read mode with the credentials of real users */
 		DieWithError("open failed\n");
 
@@ -53,6 +57,21 @@ int authentication(int client_socket)
 	
 
 	fclose(fd);		/* Close the file */
+
+	return 0;
+}
+
+/*
+	Check if the user with the name passed is already logged, if yes, send the Login Failed string and exit
+*/
+int check_if_logged(char name[])
+{
+	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
+		if(strcmp(user[j].username, name) == 0 && user[j].logged == 1)
+		{
+			ping(client_socket, "Login Failed!", 0);
+			return -1;
+		}
 
 	return 0;
 }

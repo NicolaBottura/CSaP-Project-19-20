@@ -44,7 +44,7 @@ char *ping(int client_socket, char *message, int reponse_len)
 	if(strlen(buff) > reponse_len)		/* +1 because there is the \n at the end */
 	{
 		v(SEMAUTH);	// PROVVISORIO: se muoio qui devo sbloccare il semaforo
-		DieWithError("Length of the message received higher than that requested size\n");
+		DieWithError("Length of the message received higher than the requested size\n");
 	}
 
 	//printf("Received: %s\n", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE

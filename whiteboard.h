@@ -22,10 +22,11 @@ char buff[BUFFSIZE];
 #define ANSSIZE 3	/* Max size of certain client's answers will be a double digit numer + \n */
 #define MENU "****** WHITEBOARD MENU ******\n \
 1) Create a topic\n \
-2) List the topics\n \
+2) List topics\n \
 3) Delete a topic\n \
 4) Reply\n \
 5) Append\n \
+6) List messages\n \
 0) Exit\n "
 
 /* Stuff for the Socket creation/management - whiteboard_sock.c */
@@ -82,7 +83,7 @@ auth_user *user;
 int *id_counter;	/* Counter defined in shared memory used to know the number of clients that have successfully logged in */
 
 /* Stuff for the topics - whiteboard_topics.c */
-#define TOPICSDB "topics.txt"
+#define TOPICSDB "db/topics.txt"
 typedef struct topics {
 	int topicid;
 	char name[AUTHLEN];
@@ -93,7 +94,7 @@ tpc *topic;
 
 /* Stuff for the threads - whiteboard_threads.c */
 #define CONTENTLEN 50
-#define THREADDB "threads.txt"
+#define THREADDB "db/threads.txt"
 typedef struct threads
 {
 	int topicid;
@@ -105,7 +106,7 @@ typedef struct threads
 thrd *thread;
 
 /* Stuff for the messages - whiteboard_messages.c */
-#define MSGDB "messages.txt"
+#define MSGDB "db/messages.txt"
 typedef struct messages {
 	int threadid;
 	char content[CONTENTLEN];
@@ -128,6 +129,7 @@ char *ping(int client_socket, char *message, int response_len);
 int create_socket(unsigned short port);
 int accept_connection(int server_socket);
 int authentication(int client_socket);
+int check_if_logged(char name[]);
 int create_topics(int client_socket, int current_id);
 int list_topics(int client_socket);
 int load_topics();
@@ -139,3 +141,5 @@ int append(int client_socket, int current_id);
 int load_messages();
 int write_messages();
 int reply(int client_socket, int current_id);
+int list_messages(int client_socket);
+int gettopicid(int id);

@@ -110,25 +110,37 @@ int serve_the_client()
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
 				DieWithError("getcurrentid() failed\n");
 
-			delete_topic(client_socket, current_id);
+			p(SEMTOPICS);								/* Mi serve davvero il semaforo? Non posso essere loggato con lo stesso client in due sessioni diverse e se non sono owner non cancello */
+			delete_topic(client_socket, current_id);	/* Checkare prima dell'auth che l'utente con le credenziali che voglio non sia gia' loggato */
+			v(SEMTOPICS);
 
 			serve_the_client(); //NOTA: faccio senza passare client_socket perche' e' global
 		}
-		case 4:											/* Reply to a topic(write a message) */
+		case 4:											/* Reply to a thread(write a message) */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
 				DieWithError("getcurrentid() failed\n");
 
+			p(SEMTOPICS);								/* Can't write a new message, if someone is deleting the topic the message will remain with no topic's references */
 			reply(client_socket, current_id);
+			v(SEMTOPICS);
 
 			serve_the_client();
 		}
-		case 5:
+		case 5:											/* Append a new thread to a topic */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
 				DieWithError("getcurrentid() failed\n");
 
+			p(SEMTOPICS);								/* If someone is deleting a topic I can't append a new thread or it will remain with no topic's references */
 			append(client_socket, current_id);
+			v(SEMTOPICS);
+
+			serve_the_client();
+		}
+		case 6:											/* List all threads and related messages */
+		{
+			list_messages(client_socket);
 
 			serve_the_client();
 		}

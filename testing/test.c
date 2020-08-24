@@ -4,7 +4,10 @@ int main()
 {
 	int *a;
 	int size = 3;
+	int b[4];
 
+	printf("size: %d\n", sizeof(b));
+		
 	a=(int *)calloc(size, sizeof(int));
 	a[0]=3;
 	a[1]=2;

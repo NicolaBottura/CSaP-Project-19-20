@@ -82,3 +82,47 @@ int reply(int client_socket, int current_id)
 		}
 	}
 }
+
+/*
+	Function that prints on the client's console all the threads and the related messages based on the topic.
+*/
+int list_messages(int client_socket)
+{
+	char *res1, *res2;
+	struct stat st;
+	int namelen, contentlen, size1, id, size2;
+
+	// !!!! SE LISTO QUANDO NON HO NIENTE SI SBRAGA !!!! //
+	for(int j=0; j<id_counter[THREADCOUNTER]; j++)
+	{
+		if(thread[j].threadid > 0)	/* Check that the topics exists - if not, the id is = -1 */
+		{
+			id=gettopicid(thread[j].topicid);
+
+			size1=asprintf(&res1, "\nID: %d\tName: %s\tFrom: %s\tTopic: %s\nContent: %s\n", thread[j].threadid, thread[j].name, thread[j].creator, topic[id].name, thread[j].content);
+			send(client_socket, res1, size1, 0);
+
+			for(int i=0; i<id_counter[MSGCOUNTER]; i++)
+				if(message[i].threadid == thread[j].threadid)
+				{
+					size2=asprintf(&res2, "\t%s: %s\n\n", message[i].creator, message[i].content);
+					send(client_socket, res2, size2, 0);
+					free(res2);
+				}
+
+			free(res1);
+		}
+	}
+	
+	ping(client_socket, "Press ENTER to continue", ANSSIZE);
+}
+
+/* 
+	Get the ID of a certain topic based on the id of the thread passed in input.
+*/
+int gettopicid(int id)
+{
+	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
+		if(id == topic[j].topicid)
+			return topic[j].topicid;
+}
