@@ -25,6 +25,7 @@ char buff[BUFFSIZE];
 2) List the topics\n \
 3) Delete a topic\n \
 4) Reply\n \
+5) Append\n \
 0) Exit\n "
 
 /* Stuff for the Socket creation/management - whiteboard_sock.c */
@@ -36,19 +37,23 @@ char buff[BUFFSIZE];
 /* Stuff for shared memory creation/management - whiteboard_shm.c */
 // RICORDA DI DEFINIRE LA SIZE DELLA SHM = SIZEOF(STRUCT)
 #define SHMPERM 0600		/* Perms for the shared memory segments */
-#define SHMKEY_A 0x12345	/* Authentication */
-#define SHMKEY_T 0x54321	/* Topics */
-#define SHMKEY_C 0x22222	/* ID Counter for users and topics */
-#define SHMKEY_M 0x33333	/* Messages */
+#define SHMKEY_A 0x11111	/* Authentication */
+#define SHMKEY_T 0x22222	/* Topics */
+#define SHMKEY_C 0x33333	/* ID Counter for users and topics */
+#define SHMKEY_TH 0x44444	/* Threads */
+#define SHMKEY_M 0x55555	/* Messages */
+
 int shmid_auth;
 int shmid_topics;
 int shmid_counter;
+int shmid_thread;
 int shmid_msg;
 
 /* Fields of the array for the IDs counter */
 #define AUTHCOUNTER 0		/* id_counter[AUTHCOUNTER] */
 #define TOPICCOUNTER 1		/* id_counter[TOPICCOUNTER] */
-#define MSGCOUNTER 2		/* id_counter[MSGCOUNTER] */
+#define THREADCOUNTER 2		/* id_counter[TOPICCOUNTER] */
+#define MSGCOUNTER 3		/* id_counter[MSGCOUNTER] */
 
 /* Stuff for semaphores creation/management - whiteboard_sem.c */
 #define SEMPERM 0600
@@ -76,25 +81,36 @@ typedef struct authentication {
 auth_user *user;
 int *id_counter;	/* Counter defined in shared memory used to know the number of clients that have successfully logged in */
 
-/* Stuff for the topics and related messages - whiteboard_topics.c */
-#define CONTENTLEN 100
+/* Stuff for the topics - whiteboard_topics.c */
 #define TOPICSDB "topics.txt"
-typedef struct topics_str {
+typedef struct topics {
 	int topicid;
 	char name[AUTHLEN];
-	char content[CONTENTLEN];
 	char creator[AUTHLEN]; 		/* Creator of the topic = user creating this topic */
-	char subscribed[CONTENTLEN];	// Controlla la lunghezza
-} topics;
-topics *topic;
+	//char subscribed[];	// Controlla la lunghezza
+} tpc;
+tpc *topic;
 
-#define MSGLEN 50
+/* Stuff for the threads - whiteboard_threads.c */
+#define CONTENTLEN 50
+#define THREADDB "threads.txt"
+typedef struct threads
+{
+	int topicid;
+	int threadid;
+	char name[AUTHLEN];
+	char content[CONTENTLEN];
+	char creator[AUTHLEN];
+} thrd;
+thrd *thread;
+
+/* Stuff for the messages - whiteboard_messages.c */
 #define MSGDB "messages.txt"
 typedef struct messages {
-	int topic_id;	// cambia nome
-	char msg_content[MSGLEN];
+	int threadid;
+	char content[CONTENTLEN];
 	// STATUS
-	char msg_creator[AUTHLEN];
+	char creator[AUTHLEN];
 } msg;
 msg *message;
 
@@ -117,6 +133,9 @@ int list_topics(int client_socket);
 int load_topics();
 int write_topics();
 int delete_topic(int client_socket, int current_id);
+int load_threads();
+int write_threads();
+int append(int client_socket, int current_id);
 int load_messages();
 int write_messages();
 int reply(int client_socket, int current_id);

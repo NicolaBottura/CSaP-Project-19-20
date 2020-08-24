@@ -9,6 +9,7 @@ void DieWithError(char *message)
 void sigint(int signal)
 {
 	write_topics();
+	write_threads();
 	write_messages();
 	remove_shm();
 	remove_sem();
@@ -49,11 +50,4 @@ char *ping(int client_socket, char *message, int reponse_len)
 	//printf("Received: %s\n", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE
 	
 	return buff;
-}
-
-char *send_only(int client_socket, char *message1, char *message2)
-{
-	strcat(message1, message2);
-
-	send(client_socket, message1, strlen(message1), 0);
 }

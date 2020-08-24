@@ -7,3 +7,26 @@ Funzione reply(); in whiteboard_topics.c.
 > NOTE: aggiungere l'ID del topic quando viene listato
 	controllare che quando muore il programma mi scrive comunque topics/messaggi nei file; in alternativa, sovrascrivo dentro al file ogni volta che ne creo o cancello uno
 	semaforo da fixare quando muore un client mentre fa un operazione per i topic - manca la v(semtopics)
+
+24/08/2020
+
+''' 
+Immagini il topic come un "argomento", all'interno del quale possono esistere diversi "temi".
+Ad esempio:
+Topic: Vacanze
+Thread 1: Posti consigliati in Grecia
+Thread 2: Dove andare con il cane
+'''
+
+Aggiungere i threads che diventano i miei topics di adesso. FATTO
+
+> NOTE: quando cancello un topic -> cancello thread e messaggi relativi
+	se listo i topics quando non c'e' niente si sbraga!
+
+TASK Completati:
+	- authentication
+	- list topics
+	- reply message
+	- create topic
+	- append thread to topic
+	- delete topic
