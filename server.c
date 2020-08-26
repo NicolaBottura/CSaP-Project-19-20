@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
 	server_socket=create_socket(port); 		/* Create the socket for communiations with clients */
 
 	id_counter[AUTHCOUNTER]=0;				/* Set the value of the id_counter(which is global and in shm) to 0 */
+	load_users();
 	load_topics();							/* Load all the topics from file */
 	load_threads();							/* Load all the threads from file */
 	load_messages();						/* Load all the messagtes from file */
@@ -101,7 +102,10 @@ int serve_the_client()
 		}
 		case 2:											/* List all the topics */
 		{
-			list_topics(client_socket);					/* list all the topics */	
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+				DieWithError("getcurrentid() failed\n");
+
+			list_topics(client_socket, current_id);					/* list all the topics */	
 
 			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
@@ -144,8 +148,22 @@ int serve_the_client()
 
 			serve_the_client();
 		}
+		case 7:											/* Subscribe to a topic */
+		{
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+				DieWithError("getcurrentid() failed\n");
+
+			subscribe(client_socket, current_id);
+			for(int j=0; j<MAXSUBS; j++)
+				printf("topic id: %d\n", user[current_id].topics_sub[j]);
+			serve_the_client();
+		}
 		case 0:
 		{	
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+				DieWithError("getcurrentid() failed\n");
+
+			user[current_id].logged=0;
 			ping(client_socket, "Exiting the program\nBYE!", 0);
 			close(client_socket);
 			exit(0);	

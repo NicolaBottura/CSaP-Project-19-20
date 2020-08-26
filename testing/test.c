@@ -1,24 +1,20 @@
 #include "../whiteboard.h"
 
+#define N 10
+
 int main()
 {
-	int *a;
-	int size = 3;
-	int b[4];
+	typedef enum {UNREAD, READ} msg_status;
 
-	printf("size: %d\n", sizeof(b));
-		
-	a=(int *)calloc(size, sizeof(int));
-	a[0]=3;
-	a[1]=2;
-	a[2]=5;
-	for(int j=0; j<3; j++)
-		printf("%d\n", a[j]);
+	msg_status status[N];
+	for(int j=0; j<N; j++)
+		status[j] = UNREAD;
+	for(int j=0; j<N; j++)
+		printf("%d\n", status[j]);
 
-	free(a[1]);
-
-	for(int j=0; j<3; j++)
-		printf("%d\n", a[j]);
-	
+	for(int j=0; j<N; j++)
+		status[j] = READ;
+	for(int j=0; j<N; j++)
+		printf("%d\n", status[j]);
 	return 0;
 }

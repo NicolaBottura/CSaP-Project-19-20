@@ -27,6 +27,7 @@ char buff[BUFFSIZE];
 4) Reply\n \
 5) Append\n \
 6) List messages\n \
+7) Subscribe\n \
 0) Exit\n "
 
 /* Stuff for the Socket creation/management - whiteboard_sock.c */
@@ -70,7 +71,12 @@ client_socket;			/* Client Socket FD */
 
 /* stuff for authentication process - whiteboard_auth.c */
 #define AUTHLEN 20
-#define CREDFILE "credentials.txt"
+#define MAXSUBS 5		/* Max topics I can subscribes */
+#define MAXMSG 10		/* Max messages unread */
+#define CREDFILE "db/credentials.txt"
+#define UNREADMSG "db/unread_msg.txt"
+typedef enum {READ, UNREAD} msg_status;	/* Status of the messages */
+
 /* Struct to contain things I need for authentication */
 typedef struct authentication {
 	char username[AUTHLEN];
@@ -78,6 +84,9 @@ typedef struct authentication {
 	int logged;		/* 1 = Logged - 0 = Not logged */
 	int usrid;		/* ID of the user when connecting to the server based on id_counter defined below */
 	int pid;		/* PID of the process that is managing the client */
+	int topics_sub[MAXSUBS];	/* add a unsub function */
+	msg_status *status;		/* This will be an array containing at each location the status of the message it represents 
+									status[2] = READ -> message with ID has been read by this user */
 } auth_user;
 auth_user *user;
 int *id_counter;	/* Counter defined in shared memory used to know the number of clients that have successfully logged in */
@@ -88,12 +97,11 @@ typedef struct topics {
 	int topicid;
 	char name[AUTHLEN];
 	char creator[AUTHLEN]; 		/* Creator of the topic = user creating this topic */
-	//char subscribed[];	// Controlla la lunghezza
 } tpc;
 tpc *topic;
 
 /* Stuff for the threads - whiteboard_threads.c */
-#define CONTENTLEN 50
+#define CONTENTLEN 100
 #define THREADDB "db/threads.txt"
 typedef struct threads
 {
@@ -128,10 +136,12 @@ int v(int semnum);
 char *ping(int client_socket, char *message, int response_len);
 int create_socket(unsigned short port);
 int accept_connection(int server_socket);
+int load_users();
+int write_users();
 int authentication(int client_socket);
 int check_if_logged(char name[]);
 int create_topics(int client_socket, int current_id);
-int list_topics(int client_socket);
+int list_topics(int client_socket, int current_id);
 int load_topics();
 int write_topics();
 int delete_topic(int client_socket, int current_id);
@@ -143,3 +153,4 @@ int write_messages();
 int reply(int client_socket, int current_id);
 int list_messages(int client_socket);
 int gettopicid(int id);
+int subscribe(int client_socket, int current_id);

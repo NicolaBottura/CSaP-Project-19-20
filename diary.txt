@@ -30,3 +30,29 @@ TASK Completati:
 	- create topic
 	- append thread to topic
 	- delete topic
+
+26/08/2020
+
+Cambio strutturale per lo status dei messaggi e le subs ai topics.
+	LIST MESSAGES -> letti o non letti da topics subs
+	LIST TOPICS -> dividi in sub e not sub
+	LIST THREADS OF A TOPIC -> thread 1
+					msg 1 - from: .... READ	  (status)
+					msg 2 - from: .... UNREAD (status)
+				   thread 2
+					....
+				   ....
+	GET MSG# -> mostra un messaggio non letto visto in precedenza nel list threads -> message status -> READ
+	SHOW TOPIC# -> mostra un certo topic, tutti i suoi threads e i messaggi -> messages status -> READ
+
+	Per fare cio', modifico la struct dell'user e aggiungo un array per i topics_subscribed[] = {1,3,4..n} <- ID del topic
+	e uno per i read_msg[] = {2,4,5..n} <- ID del messaggio.
+
+IDEA: uso una funzionalita' tipo status che mi showa tutti i messaggi unread, dopodiche posso scegliere quale leggere(uno alla volta o tutti insieme).
+
+
+> NOTE: mettere a posto gli array di topcis/messaggi/threads che saltano degli spazi nell'occorrenze
+	controllare che durante eventi come crash del pc scriva nei file o scrivere direttamente dopo ogni operazione
+	provare a fare una base di shared memory per ottimizzare
+	se failo il numero di operazione, per esempio ne ho 7 totali e metto 9, si sbraga e non riparte il semaforo
+	aggiungere UNSUB option

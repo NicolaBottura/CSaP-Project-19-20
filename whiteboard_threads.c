@@ -61,8 +61,10 @@ int append(int client_socket, int current_id)
 	char id_char[ANSSIZE];
 	int id, namelen, contentlen;
 
+	// POSSO FARE QUEST'OPERAZIONE SOLO SE SONO ISCRITTO AL TOPIC A CUI VOGLIO APPENDERE IL THREAD??? 
+
 	strcpy(id_char, ping(client_socket, "Choose the ID of the topic in which you want to append the thread: ", ANSSIZE));
-	id=strtol(id_char, NULL, 0);																			/* Convert it in an int type */
+	id=strtol(id_char, NULL, 0);					/* Convert it in an int type */
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)	/* Check that the ID of the topic exists */
 	{

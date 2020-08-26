@@ -8,6 +8,7 @@ void DieWithError(char *message)
 
 void sigint(int signal)
 {
+	write_users();
 	write_topics();
 	write_threads();
 	write_messages();
