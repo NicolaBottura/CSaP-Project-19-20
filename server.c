@@ -154,8 +154,16 @@ int serve_the_client()
 				DieWithError("getcurrentid() failed\n");
 
 			subscribe(client_socket, current_id);
-			for(int j=0; j<MAXSUBS; j++)
-				printf("topic id: %d\n", user[current_id].topics_sub[j]);
+
+			serve_the_client();
+		}
+		case 8:
+		{
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+				DieWithError("getcurrentid() failed\n");
+
+			show_unread(client_socket, current_id);
+
 			serve_the_client();
 		}
 		case 0:
@@ -167,6 +175,11 @@ int serve_the_client()
 			ping(client_socket, "Exiting the program\nBYE!", 0);
 			close(client_socket);
 			exit(0);	
+		}
+		default:
+		{
+			ping(client_socket, "Invalid Option\nPress ENTER to continue", 0);	// non funzia
+			serve_the_client();
 		}
 	}
 }

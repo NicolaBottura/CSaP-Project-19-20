@@ -41,7 +41,6 @@ int write_users()
 
 	return 0;
 }
-// INT LOAD_MSG_UNREAD
 
 /* 
 	Function used to authenticate the users once they connect to the server's listening socket.
@@ -50,7 +49,7 @@ int write_users()
 */
 int authentication(int client_socket)
 {
-	char name[AUTHLEN], passwd[AUTHLEN];	
+	char name[AUTHLEN], passwd[AUTHLEN];
 	int namelen, passlen;
 
 	user[id_counter[AUTHCOUNTER]].logged=0;

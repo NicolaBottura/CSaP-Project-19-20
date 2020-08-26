@@ -28,6 +28,7 @@ char buff[BUFFSIZE];
 5) Append\n \
 6) List messages\n \
 7) Subscribe\n \
+8) Show unread messages\n \
 0) Exit\n "
 
 /* Stuff for the Socket creation/management - whiteboard_sock.c */
@@ -72,11 +73,9 @@ client_socket;			/* Client Socket FD */
 /* stuff for authentication process - whiteboard_auth.c */
 #define AUTHLEN 20
 #define MAXSUBS 5		/* Max topics I can subscribes */
-#define MAXMSG 10		/* Max messages unread */
+#define MAXUNREAD 50
 #define CREDFILE "db/credentials.txt"
 #define UNREADMSG "db/unread_msg.txt"
-typedef enum {READ, UNREAD} msg_status;	/* Status of the messages */
-
 /* Struct to contain things I need for authentication */
 typedef struct authentication {
 	char username[AUTHLEN];
@@ -85,8 +84,7 @@ typedef struct authentication {
 	int usrid;		/* ID of the user when connecting to the server based on id_counter defined below */
 	int pid;		/* PID of the process that is managing the client */
 	int topics_sub[MAXSUBS];	/* add a unsub function */
-	msg_status *status;		/* This will be an array containing at each location the status of the message it represents 
-									status[2] = READ -> message with ID has been read by this user */
+	int unread_msg[MAXUNREAD];
 } auth_user;
 auth_user *user;
 int *id_counter;	/* Counter defined in shared memory used to know the number of clients that have successfully logged in */
@@ -116,9 +114,9 @@ thrd *thread;
 /* Stuff for the messages - whiteboard_messages.c */
 #define MSGDB "db/messages.txt"
 typedef struct messages {
+	int msgid;
 	int threadid;
 	char content[CONTENTLEN];
-	// STATUS
 	char creator[AUTHLEN];
 } msg;
 msg *message;
@@ -154,3 +152,4 @@ int reply(int client_socket, int current_id);
 int list_messages(int client_socket);
 int gettopicid(int id);
 int subscribe(int client_socket, int current_id);
+void show_unread(int client_socket, int current_id);

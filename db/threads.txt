@@ -1,7 +1,3 @@
-1 2 pass assa assa
-2 2 admin asa saassa
-4 4 admin ass assa
-6 7 ciao ciao ciao
-9 4 ciao as asas
-10 4 admin wellll weeeee
-11 9 pass as vascanze
+1 1 admin Napoli merda
+2 1 admin wella wella a tutti
+3 2 admin cioao 1111
