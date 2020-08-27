@@ -1,5 +1,7 @@
 #include "whiteboard.h"
 
+//IMPORTANTE -> SE MUOIO NON FACCIO IL LOGOUT QUINTI LOGGED=0 E NON POSSO PIU ENTRARE
+
 /*
 	Load all the credentials in the array of struct for the users
 	file format: username password

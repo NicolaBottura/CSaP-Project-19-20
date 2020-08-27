@@ -63,8 +63,11 @@ int write_topics()
 */
 int create_topics(int client_socket, int current_id)	// NOTE: SE CREO IL TOPIC MI CI AUTO SUBSCRIBO
 {
-	//FILE *fd;
-	int namelen, contentlen;
+	int namelen, contentlen, op, pos;
+	char subscribe_menu[] = "Max limit of subscription reached!\n \
+	1) Unsubscribe from a topic to add the new one\n \
+	2) Continue without subscribing\n",
+	char_op[ANSSIZE];
 
 	strcpy(topic[id_counter[TOPICCOUNTER]].name, ping(client_socket, "### TOPIC CREATION MENU ###\nInsert the topic name: ", AUTHLEN));
 	strcpy(topic[id_counter[TOPICCOUNTER]].creator, user[current_id].username);
@@ -73,6 +76,36 @@ int create_topics(int client_socket, int current_id)	// NOTE: SE CREO IL TOPIC M
 	/*Remove the '\n' from the user's input fields */
 	namelen=strlen(topic[id_counter[TOPICCOUNTER]].name);
 	topic[id_counter[TOPICCOUNTER]].name[namelen-1]=0;
+
+	for(int j=0; j<MAXSUBS; j++)
+		if(user[current_id].topics_sub[j] == 0)
+		{
+			user[current_id].topics_sub[j] = id_counter[TOPICCOUNTER];
+			break;
+		}
+		else if(user[current_id].topics_sub[j] > 0 && j == MAXSUBS-1)
+		{
+			strcpy(char_op, ping(client_socket, subscribe_menu, ANSSIZE));	
+			op=strtol(char_op, NULL, 0);
+
+			switch(op)
+			{
+				case 1:
+				{
+					if((pos=unsubscribe(client_socket, current_id)) >= 0)
+					{
+						user[current_id].topics_sub[pos]=id_counter[TOPICCOUNTER];
+						break;
+					}
+					else
+						break;
+				}
+				case 2:
+				{
+					break;
+				}
+			}
+		}
 
 	//if((fd=fopen(TOPICSDB, "a+")) < 0)
 	//	DieWithError("open() failed\n");
@@ -226,19 +259,19 @@ int subscribe(int client_socket, int current_id)
 /*
 	Remove the subscription at a certain topic for the current user.
 */
-void unsubscribe(int client_socket, int current_id)
+int unsubscribe(int client_socket, int current_id)
 {
 	char id_char[ANSSIZE];
 	int id;
 
-	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to SUBSCRIBE: ", ANSSIZE));
+	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to UNSUBSCRIBE: ", ANSSIZE));
 	id=strtol(id_char, NULL, 0);
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1))
 		{
 			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
-			return;
+			return -1;
 		}
 		else if(topic[j].topicid == id)
 		{
@@ -247,13 +280,12 @@ void unsubscribe(int client_socket, int current_id)
 				{
 					user[current_id].topics_sub[j]=0;
 					ping(client_socket, "Successfully unsubscribed\nPress ENTER to continue!", ANSSIZE);
-					return;
+					return j;
 				}
 				else if(user[current_id].topics_sub[j] != id && j == MAXSUBS-1)
 				{
 					ping(client_socket, "You are not subscribed at this topic\nPress ENTER to continue!", ANSSIZE);
-					return;
+					return -1;
 				}
 		}
-
 }

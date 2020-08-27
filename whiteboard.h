@@ -29,6 +29,7 @@ char buff[BUFFSIZE];
 6) List messages\n \
 7) Subscribe\n \
 8) Show unread messages\n \
+9) Unsubscribe a topic\n \
 0) Exit\n "
 
 /* Stuff for the Socket creation/management - whiteboard_sock.c */
@@ -155,4 +156,4 @@ int list_messages(int client_socket);
 int gettopicid(int id);
 int subscribe(int client_socket, int current_id);
 void show_unread(int client_socket, int current_id);
-void unsubscribe(int client_socket, int current_id);
+int unsubscribe(int client_socket, int current_id);

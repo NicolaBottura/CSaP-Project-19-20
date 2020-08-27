@@ -184,6 +184,11 @@ void show_unread(int client_socket, int current_id)	/* IMPORTANTE ------------> 
 			}
 			case 0:
 				break;
+			default:
+			{	
+				ping(client_socket, "Invalid operation, exiting from here!\nPress ENTER to continue!", ANSSIZE);
+				break;
+			}
 		}
 	}
 
@@ -212,6 +217,7 @@ int list_messages(int client_socket)	/* trasforma in show topic # - se sono iscr
 
 			size1=asprintf(&res1, "\nID: %d\tName: %s\tFrom: %s\tTopic: %s\nContent: %s\n", thread[j].threadid, thread[j].name, thread[j].creator, topic[id].name, thread[j].content);
 			send(client_socket, res1, size1, 0);
+			free(res1);
 
 			for(int i=0; i<id_counter[MSGCOUNTER]; i++)
 				if(message[i].threadid == thread[j].threadid)
@@ -220,8 +226,6 @@ int list_messages(int client_socket)	/* trasforma in show topic # - se sono iscr
 					send(client_socket, res2, size2, 0);
 					free(res2);
 				}
-
-			free(res1);
 		}
 	}
 	

@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
 
 	semvals[SEMAUTH] = 1;
 	semvals[SEMTOPICS] = 1;
+	// AGGIUNGERE QUELLO PER I MEX E I THREAD
 
 	if(get_sem(SEMPERM | IPC_CREAT) < 0)
 		DieWithError("get_sem() failed\n");
