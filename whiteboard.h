@@ -73,8 +73,9 @@ client_socket;			/* Client Socket FD */
 /* stuff for authentication process - whiteboard_auth.c */
 #define AUTHLEN 20
 #define MAXSUBS 5		/* Max topics I can subscribes */
-#define MAXUNREAD 50
+#define MAXUNREAD 10
 #define CREDFILE "db/credentials.txt"
+#define SUBFILE "db/subscriptions.txt"
 #define UNREADMSG "db/unread_msg.txt"
 /* Struct to contain things I need for authentication */
 typedef struct authentication {
@@ -135,7 +136,8 @@ char *ping(int client_socket, char *message, int response_len);
 int create_socket(unsigned short port);
 int accept_connection(int server_socket);
 int load_users();
-int write_users();
+void load_utils();
+void write_utils();
 int authentication(int client_socket);
 int check_if_logged(char name[]);
 int create_topics(int client_socket, int current_id);
@@ -153,3 +155,4 @@ int list_messages(int client_socket);
 int gettopicid(int id);
 int subscribe(int client_socket, int current_id);
 void show_unread(int client_socket, int current_id);
+void unsubscribe(int client_socket, int current_id);

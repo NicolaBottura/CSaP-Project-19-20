@@ -95,10 +95,21 @@ int reply(int client_socket, int current_id)
 	}
 }
 
-void show_unread(int client_socket, int current_id)	/* di un topic a cui sono iscritto pero'! */
+/*
+	This function is composed by two client functionalities:
+		1) ~status[message#]
+		2) GET[message#]
+	My interpretation of these commands were: 
+		for the status, instead of showing the status of a specific message, I'll choose this option and the server show me
+		which message I have not read from the topis I'm subscribed at - format: ID Creator
+		Then, if there are messages unread, I can choose between two options:
+			2.1) Display every unread message with their content - formnat: creator:content
+			2.2) Display a specific message by entering its ID
+*/
+void show_unread(int client_socket, int current_id)	/* IMPORTANTE ------------> di un topic a cui sono iscritto pero'! */
 {
-	int counter=0, size1, size2, operation, pos;
-	char *tmp1, *tmp2, op[ANSSIZE];
+	int counter=0, size1, size2, operation, pos, id;
+	char *tmp1, *tmp2, op[ANSSIZE], id_char[ANSSIZE];
 	char status_menu [] = "Choose if you want to display:\n \
 	1) All the messages unread\n \
 	2) A specific message\n \
@@ -108,46 +119,72 @@ void show_unread(int client_socket, int current_id)	/* di un topic a cui sono is
 		if(user[current_id].unread_msg[j] > 0)
 			counter+=1;
 
-	size1=asprintf(&tmp1, "You have %d messages unread!\n", counter);	// NOTA: da usare quando mi autentico: Benvenuto X, hai N messaggi non letti!
+	size1=asprintf(&tmp1, "\nYou have %d messages unread!\n", counter);	// NOTA: da usare quando mi autentico: Benvenuto X, hai N messaggi non letti!
 	send(client_socket, tmp1, size1, 0);
 
-	for(int j=0; j<MAXUNREAD; j++)
-		if(user[current_id].unread_msg[j] > 0)
-		{		
-			pos=user[current_id].unread_msg[j]; 
-			size2=asprintf(&tmp2, "\nUNREAD message: %d\tFrom: %s\n\n", user[current_id].unread_msg[j], message[pos].creator); // aggiungi anche il topic?
-			send(client_socket, tmp2, size2, 0);
-		}
-
-	free(tmp2);
-	strcpy(op, ping(client_socket, status_menu, ANSSIZE));		/* Send the MENU to the client */
-	operation = strtol(op, NULL, 0); 		
-
-	switch(operation)
+	if(counter > 0)
 	{
-		case 1:	/* Show all the unread messagess */
-		{
-			for(int j=0; j<MAXUNREAD; j++)
-				if(user[current_id].unread_msg[j] > 0)
-				{
-					pos=user[current_id].unread_msg[j]; 
-					size1=asprintf(&tmp1, "\nID: %d\t%s: %s\n\n", message[pos].msgid, message[pos].creator, message[pos].content);
-					send(client_socket, tmp1, size1, 0);
-					free(tmp1);
-				}
-			
-			for(int j=0; j<MAXUNREAD; j++)
-				if(user[current_id].unread_msg[j] > 0)
-					user[current_id].unread_msg[j]=0;	/* Set to READ (=0) */
+		for(int j=0; j<MAXUNREAD; j++)
+			if(user[current_id].unread_msg[j] > 0)
+			{		
+				pos=user[current_id].unread_msg[j]; 
+				size2=asprintf(&tmp2, "\nUNREAD message: %d\tFrom: %s\n\n", user[current_id].unread_msg[j], message[pos].creator); // aggiungi anche il topic?
+				send(client_socket, tmp2, size2, 0);
+			}
 
-			break;
-		}
-		case 2: /* Choose the ID of the message you want to read and display it */
+		free(tmp2);
+	
+		strcpy(op, ping(client_socket, status_menu, ANSSIZE));		/* Send the MENU to the client */
+		operation = strtol(op, NULL, 0); 		
+
+		switch(operation)
 		{
+			case 1:	/* Show all the unread messagess */
+			{
+				for(int j=0; j<MAXUNREAD; j++)
+					if(user[current_id].unread_msg[j] > 0)
+					{
+						pos=user[current_id].unread_msg[j]; 
+						size1=asprintf(&tmp1, "\nID: %d\t%s: %s\n\n", message[pos].msgid, message[pos].creator, message[pos].content);
+						send(client_socket, tmp1, size1, 0);
+						free(tmp1);
+					}
 				
+				for(int j=0; j<MAXUNREAD; j++)
+					if(user[current_id].unread_msg[j] > 0)
+						user[current_id].unread_msg[j]=0;	/* Set to READ (=0) */
+
+				break;
+			}
+			case 2: /* Choose the ID of the message you want to read and display it */
+			{
+				strcpy(id_char, ping(client_socket, "Choose the ID of the message you want to display: ", ANSSIZE));		/* Send the MENU to the client */
+				id=strtol(id_char, NULL, 0);
+
+				for(int j=0; j<id_counter[MSGCOUNTER]; j++)
+					if(message[j].msgid == id)
+					{
+						for(int j=0; j<MAXUNREAD; j++)
+							if(id == user[current_id].unread_msg[j])
+							{
+								size2=asprintf(&tmp2, "\n%s: %s\n\n", message[id].creator, message[id].content);
+								send(client_socket, tmp2, size2, 0);
+
+								user[current_id].unread_msg[j]=0;
+
+								free(tmp2);
+								return;							
+							}
+					}
+					else if(message[j].msgid != id && j == id_counter[MSGCOUNTER]-1)
+					{
+						ping(client_socket, "This message does not exist!\nPress ENTER to continue!", ANSSIZE);
+						return;
+					}
+			}
+			case 0:
+				break;
 		}
-		case 0:
-			return;
 	}
 
 	return;
@@ -155,6 +192,10 @@ void show_unread(int client_socket, int current_id)	/* di un topic a cui sono is
 
 /*
 	Function that prints on the client's console all the threads and the related messages based on the topic.
+	Prints out all the threads from the topics to which I am subscribed and the related messages, read and unread, and if there are
+	unread message I'll set them as read.
+	Format:	Thread-ID Thread-name Thread-creator Topic-name Thread-Content
+					Message-ID Message-creator:Message-Content
 */
 int list_messages(int client_socket)	/* trasforma in show topic # - se sono iscritto a quel topic */
 {

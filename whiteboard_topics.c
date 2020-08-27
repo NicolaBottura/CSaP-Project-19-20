@@ -30,7 +30,7 @@ int load_topics()
 		id_counter[TOPICCOUNTER]=0;
 		fclose(fd);
 		return 0;
-	}*/			// mezzo problema, il mio primo topic(quando parto da file vuoto) e' sempre al posto 1, non 0
+	}*/			// mezzo problema, il mio primo topic(quando parto da file vuoto) e' sempre al posto 1, non 0 ma l'id e' giusto, ovvero parte da 1
 
 	
 	id_counter[TOPICCOUNTER]+=1;
@@ -61,7 +61,7 @@ int write_topics()
 	Function used to create a topic, asking the client for the fields needed to complete the elements in the struct.
 		Uses the function pong() defined in utils.c to send and receive the proper fields.
 */
-int create_topics(int client_socket, int current_id)
+int create_topics(int client_socket, int current_id)	// NOTE: SE CREO IL TOPIC MI CI AUTO SUBSCRIBO
 {
 	//FILE *fd;
 	int namelen, contentlen;
@@ -101,7 +101,10 @@ int list_topics(int client_socket, int current_id)
 	char *res;
 	struct stat st;
 	int namelen, contentlen, size;
-
+	/* Write in the file the fields of the new topic */
+	//fprintf(fd, "%d %s %s %s\n", id_counter[TOPICCOUNTER], user[current_id].username, topic->name, topic->content); //asctime(tm) to print the current time
+	//id_counter[TOPICCOUNTER]+=1;
+	//fclose(fd);
 	// !!!! SE LISTO QUANDO NON HO NIENTE SI SBRAGA !!!! //
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 	{
@@ -218,4 +221,39 @@ int subscribe(int client_socket, int current_id)
 		}
 	
 	return 0;
+}
+
+/*
+	Remove the subscription at a certain topic for the current user.
+*/
+void unsubscribe(int client_socket, int current_id)
+{
+	char id_char[ANSSIZE];
+	int id;
+
+	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to SUBSCRIBE: ", ANSSIZE));
+	id=strtol(id_char, NULL, 0);
+
+	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
+		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1))
+		{
+			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
+			return;
+		}
+		else if(topic[j].topicid == id)
+		{
+			for(int j=0; j<MAXSUBS; j++)
+				if(user[current_id].topics_sub[j] == id)
+				{
+					user[current_id].topics_sub[j]=0;
+					ping(client_socket, "Successfully unsubscribed\nPress ENTER to continue!", ANSSIZE);
+					return;
+				}
+				else if(user[current_id].topics_sub[j] != id && j == MAXSUBS-1)
+				{
+					ping(client_socket, "You are not subscribed at this topic\nPress ENTER to continue!", ANSSIZE);
+					return;
+				}
+		}
+
 }

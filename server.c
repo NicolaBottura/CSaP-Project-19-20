@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
 
 	id_counter[AUTHCOUNTER]=0;				/* Set the value of the id_counter(which is global and in shm) to 0 */
 	load_users();
+	load_utils();
 	load_topics();							/* Load all the topics from file */
 	load_threads();							/* Load all the threads from file */
 	load_messages();						/* Load all the messagtes from file */
@@ -166,6 +167,15 @@ int serve_the_client()
 
 			serve_the_client();
 		}
+		case 9:
+		{
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+				DieWithError("getcurrentid() failed\n");
+
+			unsubscribe(client_socket, current_id);
+
+			serve_the_client();
+		}
 		case 0:
 		{	
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
@@ -178,7 +188,7 @@ int serve_the_client()
 		}
 		default:
 		{
-			ping(client_socket, "Invalid Option\nPress ENTER to continue", 0);	// non funzia
+			ping(client_socket, "Invalid Option\nPress ENTER to continue", ANSSIZE);	// non funzia
 			serve_the_client();
 		}
 	}
