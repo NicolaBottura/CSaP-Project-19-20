@@ -57,10 +57,17 @@ int reply(int client_socket, int current_id)
 	char id_char[ANSSIZE];
 	int id, contentlen;
 
-	// IPMPORTANTE -> IL TOPIC NUMERO 0 ESISTE ANCHE SE NON C'E' NIENTE DENTRO E POSSO QUINDI FARE LA REPLY, FIXARE STA COSA ASAP 
-
-	strcpy(id_char, ping(client_socket, "Choose the thread ID on which you want to REPLY: ", ANSSIZE));		/* Ask the ID of the topic */
+	strcpy(id_char, ping(client_socket, "Choose the thread ID on which you want to REPLY: ", ANSSIZE));		/* Ask the ID of the thread */
 	id=strtol(id_char, NULL, 0);																			/* Convert it in an int type */
+
+	for(int j=0; j<MAXSUBS; j++)
+		if(user[current_id].topics_sub[j] == thread[id].topicid) 	/* If I'm not suibscribed to the topic that belongs to the chosen thread, I can't write a new message under it */
+			break;
+		else if(user[current_id].topics_sub[j] != id && j == MAXSUBS-1)
+		{
+			ping(client_socket, "You are not subscribed to the topic of this thread!\nPress ENTER to continue", ANSSIZE);
+			return 0;
+		}
 
 	for(int j=0; j<id_counter[THREADCOUNTER]; j++)	/* Check that the ID of the topic exists */
 	{
@@ -81,12 +88,14 @@ int reply(int client_socket, int current_id)
 			message[id_counter[MSGCOUNTER]].content[contentlen-1]=0;
 
 			for(int i=0; i<id_counter[AUTHCOUNTER]; i++)			/* Set the new message as UNREAD for every user different from the one who wrote it */
-				for(int x=0; x<MAXUNREAD; x++)
-					if(user[i].usrid != current_id && user[i].unread_msg[x] == 0)
-					{
-						user[i].unread_msg[x]=id_counter[MSGCOUNTER];
-						break;
-					}
+				for(int j=0; j<MAXSUBS; j++)
+					if(user[i].topics_sub[j] == thread[id].topicid)	/* If the user is subscribed at this topic.. */
+						for(int x=0; x<MAXUNREAD; x++)
+							if(user[i].usrid != current_id && user[i].unread_msg[x] == 0)
+							{
+								user[i].unread_msg[x]=id_counter[MSGCOUNTER];	/* .. add the ID of the new message in the unread messages array */
+								break;
+							}
 
 			id_counter[MSGCOUNTER]+=1;
 
@@ -106,7 +115,7 @@ int reply(int client_socket, int current_id)
 			2.1) Display every unread message with their content - formnat: creator:content
 			2.2) Display a specific message by entering its ID
 */
-void show_unread(int client_socket, int current_id)	/* IMPORTANTE ------------> di un topic a cui sono iscritto pero'! */
+void show_unread(int client_socket, int current_id)
 {
 	int counter=0, size1, size2, operation, pos, id;
 	char *tmp1, *tmp2, op[ANSSIZE], id_char[ANSSIZE];
@@ -128,7 +137,7 @@ void show_unread(int client_socket, int current_id)	/* IMPORTANTE ------------> 
 			if(user[current_id].unread_msg[j] > 0)
 			{		
 				pos=user[current_id].unread_msg[j]; 
-				size2=asprintf(&tmp2, "\nUNREAD message: %d\tFrom: %s\n\n", user[current_id].unread_msg[j], message[pos].creator); // aggiungi anche il topic?
+				size2=asprintf(&tmp2, "\nUNREAD message ID: %d\tFrom: %s\n\n", user[current_id].unread_msg[j], message[pos].creator); // aggiungi anche il topic?
 				send(client_socket, tmp2, size2, 0);
 			}
 
@@ -202,34 +211,61 @@ void show_unread(int client_socket, int current_id)	/* IMPORTANTE ------------> 
 	Format:	Thread-ID Thread-name Thread-creator Topic-name Thread-Content
 					Message-ID Message-creator:Message-Content
 */
-int list_messages(int client_socket)	/* trasforma in show topic # - se sono iscritto a quel topic */
+int display_topic_content(int client_socket, int current_id)	/* mi serve perche' se mi iscrivo dopo ad un topic, non ho i messaggi nell'unread msg e quindi posso visualizzare comunque tutto */
 {
 	char *res1, *res2;
 	struct stat st;
 	int namelen, contentlen, size1, id, size2;
+	char id_char[ANSSIZE];
 
-	// !!!! SE LISTO QUANDO NON HO NIENTE SI SBRAGA !!!! //
+	strcpy(id_char, ping(client_socket, "Choose the ID of the TOPIC you want to see: ", ANSSIZE));		/* Ask the ID of the thread */
+	id=strtol(id_char, NULL, 0);
+
 	for(int j=0; j<id_counter[THREADCOUNTER]; j++)
-	{
-		if(thread[j].threadid > 0)	/* Check that the topics exists - if not, the id is = -1 */
+		if(thread[j].threadid == 0 && j == id_counter[THREADCOUNTER]-1)	/* Check if there are topics stored */
 		{
-			id=gettopicid(thread[j].topicid);
-
-			size1=asprintf(&res1, "\nID: %d\tName: %s\tFrom: %s\tTopic: %s\nContent: %s\n", thread[j].threadid, thread[j].name, thread[j].creator, topic[id].name, thread[j].content);
-			send(client_socket, res1, size1, 0);
-			free(res1);
-
-			for(int i=0; i<id_counter[MSGCOUNTER]; i++)
-				if(message[i].threadid == thread[j].threadid)
-				{
-					size2=asprintf(&res2, "\tID: %d\t%s: %s\n\n", message[i].msgid, message[i].creator, message[i].content);
-					send(client_socket, res2, size2, 0);
-					free(res2);
-				}
+			ping(client_socket, "No threads to show!\nPress ENTER to continue", ANSSIZE);
+			return 0;
 		}
-	}
-	
-	ping(client_socket, "Press ENTER to continue", ANSSIZE);
+
+	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)	/* Check that the ID of the topic exists */
+		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1))
+		{
+			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
+			return 0;
+		}
+		else if(topic[j].topicid == id)
+		{
+			for(int i=0; i<MAXSUBS; i++)
+				if(user[current_id].topics_sub[i] == id)	/* If the user is subscribed at this topic.. */
+				{
+					for(int x=0; x<id_counter[THREADCOUNTER]; x++)
+						if(thread[x].threadid > 0 && thread[x].topicid == id)	/* Check that the thread exists */
+						{
+							size1=asprintf(&res1, "\nID: %d\tName: %s\tFrom: %s\tTopic: %s\nContent: %s\n\n", thread[x].threadid, thread[x].name, thread[x].creator, topic[id].name, thread[x].content);
+							send(client_socket, res1, size1, 0);
+							free(res1);
+
+							for(int y=0; y<id_counter[MSGCOUNTER]; y++)
+								if(message[y].threadid == thread[x].threadid)
+								{
+									size2=asprintf(&res2, "\tID: %d\t%s: %s\n\n", message[y].msgid, message[y].creator, message[y].content);
+									send(client_socket, res2, size2, 0);
+									free(res2);
+								}
+						}
+
+					ping(client_socket, "Press ENTER to continue", ANSSIZE);
+					return 0;
+				}
+				else if(user[current_id].topics_sub[i] != id && i == MAXSUBS-1)
+				{
+					ping(client_socket, "You can't see topics you're not subscribed to!\nPress ENTER to continue", ANSSIZE);
+					return 0;
+				}
+			
+			//return 0;	/* Without this here, it will execute another round in the for and print the topic not existing message */
+		}	
 }
 
 /* 

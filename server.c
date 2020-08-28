@@ -146,7 +146,10 @@ int serve_the_client()
 		}
 		case 6:											/* List all threads and related messages */
 		{
-			list_messages(client_socket);
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+				DieWithError("getcurrentid() failed\n");
+				
+			display_topic_content(client_socket, current_id);
 
 			serve_the_client();
 		}

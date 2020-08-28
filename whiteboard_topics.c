@@ -49,7 +49,7 @@ int write_topics()
 	
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 	{
-		if(topic[j].topicid > 0)	/* Check that the topics exists - if not, the id is = -1 */
+		if(topic[j].topicid > 0)	/* Check that the topics exists - if not, the id is = -1 */ // DA CONTROLLARE
 			fprintf(fd, "%d %s %s\n", topic[j].topicid, topic[j].creator, topic[j].name); 
 	}
 
@@ -61,7 +61,7 @@ int write_topics()
 	Function used to create a topic, asking the client for the fields needed to complete the elements in the struct.
 		Uses the function pong() defined in utils.c to send and receive the proper fields.
 */
-int create_topics(int client_socket, int current_id)	// NOTE: SE CREO IL TOPIC MI CI AUTO SUBSCRIBO
+int create_topics(int client_socket, int current_id)
 {
 	int namelen, contentlen, op, pos;
 	char subscribe_menu[] = "Max limit of subscription reached!\n \
@@ -134,11 +134,14 @@ int list_topics(int client_socket, int current_id)
 	char *res;
 	struct stat st;
 	int namelen, contentlen, size;
-	/* Write in the file the fields of the new topic */
-	//fprintf(fd, "%d %s %s %s\n", id_counter[TOPICCOUNTER], user[current_id].username, topic->name, topic->content); //asctime(tm) to print the current time
-	//id_counter[TOPICCOUNTER]+=1;
-	//fclose(fd);
-	// !!!! SE LISTO QUANDO NON HO NIENTE SI SBRAGA !!!! //
+
+	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
+		if(topic[j].topicid == 0 && j == id_counter[TOPICCOUNTER]-1)	/* Check if there are topics stored */
+		{
+			ping(client_socket, "No topics to show!\nPress ENTER to continue", ANSSIZE);
+			return 0;
+		}
+
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 	{
 		if(topic[j].topicid > 0)	/* Check that the topics exists - if not, the id is = -1 */
@@ -178,6 +181,22 @@ int delete_topic(int client_socket, int current_id)
 
 	if(strcmp(user[current_id].username, topic[id].creator) == 0)		/* If I am the owner of this topic */
 	{	
+		/*
+			Remove the subscription from the topic to everyone who have it and 
+			remove the messages from the unread list
+		*/
+		for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
+			for(int i=0; i<MAXSUBS; i++)
+				if(user[j].topics_sub[i] == id)
+					user[j].topics_sub[i] = 0;
+
+		for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
+			for(int i=0; i<MAXUNREAD; i++)
+				for(int y=0; y<id_counter[THREADCOUNTER]; y++)
+					for(int x=0; x<id_char[MSGCOUNTER]; x++)
+						if(thread[y].topicid == id && thread[y].threadid == message[x].threadid && user[j].unread_msg[i] == message[x].msgid)
+							user[j].unread_msg[i] = 0;
+
 		for(int j=0; j<id_counter[THREADCOUNTER]; j++)
 			if(thread[j].topicid == id)
 			{

@@ -24,13 +24,13 @@ char buff[BUFFSIZE];
 1) Create a topic\n \
 2) List topics\n \
 3) Delete a topic\n \
-4) Reply\n \
-5) Append\n \
-6) List messages\n \
-7) Subscribe\n \
+4) Reply to a thread\n \
+5) Create a thread\n \
+6) Display a topic content\n \
+7) Subscribe to a topic\n \
 8) Show unread messages\n \
 9) Unsubscribe a topic\n \
-0) Exit\n "
+0) Quit\n"
 
 /* Stuff for the Socket creation/management - whiteboard_sock.c */
 #define DOMAIN AF_INET
@@ -152,7 +152,7 @@ int append(int client_socket, int current_id);
 int load_messages();
 int write_messages();
 int reply(int client_socket, int current_id);
-int list_messages(int client_socket);
+int display_topic_content(int client_socket, int current_id);
 int gettopicid(int id);
 int subscribe(int client_socket, int current_id);
 void show_unread(int client_socket, int current_id);

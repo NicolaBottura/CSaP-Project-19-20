@@ -32,9 +32,8 @@ int main(int argc, char *argv[])
 
 	for(;;)
 	{
-		communication(sfd); /* Username exchange */
+		communication(sfd);
 	}
-
 
 	close(sfd); /* Close the connection and destroy the socket */
 	exit(0);
