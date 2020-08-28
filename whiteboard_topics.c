@@ -238,7 +238,7 @@ int delete_topic(int client_socket, int current_id)
 			2) if the client is already subscribed to the topic chosen;
 			3) if the client has already reached the max number of topics he can subscribe to.
 */
-int subscribe(int client_socket, int current_id)
+int subscribe(int client_socket, int current_id) 	// SE MI ISCRIVO RICEVO IN UNREAD TUTTI I MESSAGGI DI QUEL TOPIC/THREAD
 {
 	char id_char[ANSSIZE];
 	int id;
@@ -265,7 +265,7 @@ int subscribe(int client_socket, int current_id)
 				if(user[current_id].topics_sub[j] == 0)	/* At the first occurrence equal to 0 add the new topic */
 				{
 					user[current_id].topics_sub[j] = id;
-					ping(client_socket, "Suibscription completed!\nPress ENTER to continue", ANSSIZE);
+					ping(client_socket, "Subscription completed!\nPress ENTER to continue", ANSSIZE);
 					return 0;
 				}
 				else if(user[current_id].topics_sub[j] > 0 && j == MAXSUBS-1)	/* Otherwise, if all the array is scanned and there are no spaces available, exit */

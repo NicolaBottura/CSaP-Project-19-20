@@ -213,7 +213,7 @@ void show_unread(int client_socket, int current_id)
 */
 int display_topic_content(int client_socket, int current_id)	/* mi serve perche' se mi iscrivo dopo ad un topic, non ho i messaggi nell'unread msg e quindi posso visualizzare comunque tutto */
 {
-	char *res1, *res2;
+	char *res1, *res2;				// IMPORTANTE, METTI TUTTI I MESSAGGI COME READ
 	struct stat st;
 	int namelen, contentlen, size1, id, size2;
 	char id_char[ANSSIZE];
@@ -252,6 +252,10 @@ int display_topic_content(int client_socket, int current_id)	/* mi serve perche'
 									size2=asprintf(&res2, "\tID: %d\t%s: %s\n\n", message[y].msgid, message[y].creator, message[y].content);
 									send(client_socket, res2, size2, 0);
 									free(res2);
+
+									for(int z=0; z<MAXUNREAD; z++)
+										if(user[current_id].unread_msg[z] == message[y].msgid)
+											user[current_id].unread_msg[z]=0;
 								}
 						}
 

@@ -74,7 +74,7 @@ client_socket;			/* Client Socket FD */
 /* stuff for authentication process - whiteboard_auth.c */
 #define AUTHLEN 20
 #define MAXSUBS 5		/* Max topics I can subscribes */
-#define MAXUNREAD 10
+#define MAXUNREAD 30
 #define CREDFILE "db/credentials.txt"
 #define SUBFILE "db/subscriptions.txt"
 #define UNREADMSG "db/unread_msg.txt"

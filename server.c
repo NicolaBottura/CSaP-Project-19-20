@@ -162,7 +162,7 @@ int serve_the_client()
 
 			serve_the_client();
 		}
-		case 8:
+		case 8:											/* Show unread messages */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
 				DieWithError("getcurrentid() failed\n");
@@ -171,7 +171,7 @@ int serve_the_client()
 
 			serve_the_client();
 		}
-		case 9:
+		case 9:											/* Unsubscribe from a topic */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
 				DieWithError("getcurrentid() failed\n");
