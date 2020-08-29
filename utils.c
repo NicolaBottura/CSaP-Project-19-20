@@ -28,7 +28,8 @@ void sigint(int signal)
 */
 char *ping(int client_socket, char *message, int reponse_len)
 {
-	int msg_len, bytesreceived;
+	int msg_len, bytesreceived, current_id;
+	char error[] = "Exiting the program\nBYE!";
 
 	msg_len = strlen(message);
 	memset(buff, 0, sizeof(buff));
@@ -42,13 +43,31 @@ char *ping(int client_socket, char *message, int reponse_len)
 	
 	buff[bytesreceived]='\0';
 
-	if(strlen(buff) > reponse_len)		/* +1 because there is the \n at the end */
+	if(strlen(buff) > reponse_len || bytesreceived <= 0)		/* +1 because there is the \n at the end */
 	{
-		v(SEMAUTH);	// PROVVISORIO: se muoio qui devo sbloccare il semaforo
-		DieWithError("Length of the message received higher than the requested size\n");
+		current_id=getcurrentid();
+		user[current_id].logged=0;
+		v(SEMAUTH);
+		v(SEMTOPICS);
+		send(client_socket, error, sizeof(error), 0);
+		DieWithError("Max length exceeded or connection close on client side\n");
 	}
 
 	//printf("Received: %s\n", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE
 	
 	return buff;
+}
+
+/* 
+	Function that returns the ID of the client on which I want to do an operation.
+		This is possible by checking the PID of the process that invokes this function.
+*/
+int getcurrentid()
+{
+	for(int j=0; j<id_counter[AUTHCOUNTER]; j++){	
+		if(user[j].pid == getpid())
+			return user[j].usrid;
+	}
+
+	return -1;	
 }

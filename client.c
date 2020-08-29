@@ -1,19 +1,31 @@
-#include "whiteboard.h"
+#include <stdio.h>      /* for printf() and fprintf() */
+#include <sys/socket.h> /* for socket(), connect(), send(), and recv() */
+#include <arpa/inet.h>  /* for sockaddr_in and inet_addr() */
+#include <stdlib.h>     /* for atoi() and exit() */
+#include <string.h>     /* for memset() */
+#include <unistd.h>     /* for close() */
+#include <sys/types.h>	/* for waitpid() */
 
+#define DOMAIN AF_INET
+#define TYPE SOCK_STREAM
+#define PROTOCOL IPPROTO_TCP
+#define BUFFSIZE 256
+#define SHMPERM 0600
+
+int sfd;
+
+void DieWithError(char *message);
 void communication(int sfd);
 
 int main(int argc, char *argv[])
 {
 	unsigned short server_port;
 	char *server_ip;
-	int sfd, ID;
+	int ID;
 	struct sockaddr_in saddr;
 
 	if(argc != 3)
 		DieWithError("Usage: ./client <server_ip> <server_ip>\n");
-
-	if(init_shm(SHMPERM) < 0)					
-		DieWithError("init_shm() failed\n");
 
 	server_ip=argv[1];
 	server_port=atoi(argv[2]);
@@ -37,6 +49,12 @@ int main(int argc, char *argv[])
 
 	close(sfd); /* Close the connection and destroy the socket */
 	exit(0);
+}
+
+void DieWithError(char *message)
+{
+	perror(message);
+	exit(1);
 }
 
 /* Function used to send and receive messages from the server */

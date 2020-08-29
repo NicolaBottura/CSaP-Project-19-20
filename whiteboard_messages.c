@@ -71,7 +71,7 @@ int reply(int client_socket, int current_id)
 
 	for(int j=0; j<id_counter[THREADCOUNTER]; j++)	/* Check that the ID of the topic exists */
 	{
-		if(id >= id_counter[THREADCOUNTER] || (thread[j].threadid != id && j==id_counter[THREADCOUNTER]-1))
+		if(id >= id_counter[THREADCOUNTER] || (thread[j].threadid != id && j==id_counter[THREADCOUNTER]-1) || id <= 0)
 		{
 			ping(client_socket, "This thread does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return 0;
@@ -98,6 +98,8 @@ int reply(int client_socket, int current_id)
 							}
 
 			id_counter[MSGCOUNTER]+=1;
+
+			ping(client_socket, "Message added!\nPress ENTER to continue", ANSSIZE);
 
 			return 0;
 		}
@@ -229,7 +231,7 @@ int display_topic_content(int client_socket, int current_id)	/* mi serve perche'
 		}
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)	/* Check that the ID of the topic exists */
-		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1))
+		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0)
 		{
 			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return 0;

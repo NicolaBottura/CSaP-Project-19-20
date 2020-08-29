@@ -75,7 +75,7 @@ int append(int client_socket, int current_id)
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)	/* Check that the ID of the topic exists */
 	{
-		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1))
+		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0)
 		{
 			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return 0;
@@ -95,6 +95,8 @@ int append(int client_socket, int current_id)
 			thread[id_counter[THREADCOUNTER]].content[contentlen-1]=0;
 
 			id_counter[THREADCOUNTER]+=1;
+
+			ping(client_socket, "Thread created!\nPress ENTER to continue", ANSSIZE);
 
 			return 0;
 		}

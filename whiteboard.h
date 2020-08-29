@@ -64,7 +64,7 @@ int shmid_msg;
 #define SEMKEY 0x11111
 #define SEMAUTH 0
 #define SEMTOPICS 1
-#define NUMSEM 2	// METTERE A POSTO
+#define NUMSEM 3	// METTERE A POSTO
 int semid;
 
 /* Both used only in server.c */
@@ -134,6 +134,7 @@ int remove_sem();
 int p(int semnum);
 int v(int semnum);
 char *ping(int client_socket, char *message, int response_len);
+int getcurrentid();
 int create_socket(unsigned short port);
 int accept_connection(int server_socket);
 int load_users();

@@ -32,7 +32,6 @@ int load_topics()
 		return 0;
 	}*/			// mezzo problema, il mio primo topic(quando parto da file vuoto) e' sempre al posto 1, non 0 ma l'id e' giusto, ovvero parte da 1
 
-	
 	id_counter[TOPICCOUNTER]+=1;
 	
 	fclose(fd);
@@ -221,7 +220,7 @@ int delete_topic(int client_socket, int current_id)
 
 		ping(client_socket, "Topic deleted!\nPress ENTER to continue", ANSSIZE);
 	}
-	else if(id >= id_counter[TOPICCOUNTER] || topic[id].topicid <= 0)
+	else if(id >= id_counter[TOPICCOUNTER] || id <= 0)
 		ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
 	else    /* Tell the client that he is not the owner of the topics he's trying to delete */
 		ping(client_socket, "You're not the owner of this topic!\nPress ENTER to continue", ANSSIZE);
@@ -245,9 +244,9 @@ int subscribe(int client_socket, int current_id) 	// SE MI ISCRIVO RICEVO IN UNR
 
 	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to SUBSCRIBE: ", ANSSIZE));
 	id=strtol(id_char, NULL, 0);
-
+	printf("id %d\n", id);
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)	/* Check that the ID of the topic exists */
-		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1))
+		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <=0)
 		{
 			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return 0;
@@ -287,7 +286,7 @@ int unsubscribe(int client_socket, int current_id)
 	id=strtol(id_char, NULL, 0);
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
-		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1))
+		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0)
 		{
 			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return -1;

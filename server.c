@@ -1,7 +1,6 @@
 #include "whiteboard.h"
 
 int serve_the_client();
-int getcurrentid();
 
 int main(int argc, char *argv[])
 {
@@ -20,7 +19,6 @@ int main(int argc, char *argv[])
 
 	semvals[SEMAUTH] = 1;
 	semvals[SEMTOPICS] = 1;
-	// AGGIUNGERE QUELLO PER I MEX E I THREAD
 
 	if(get_sem(SEMPERM | IPC_CREAT) < 0)
 		DieWithError("get_sem() failed\n");
@@ -52,7 +50,7 @@ int main(int argc, char *argv[])
 				p(SEMAUTH);		/* sem-1 for AUTH */
 				authentication(client_socket); /* Send the authentication form and if the login is successful, send the menu */
 				v(SEMAUTH);		/* sem+1 for AUTH */
-				
+
 				serve_the_client();		/* Print the MENU and manage the operations called by the clients */
 
 				//user->logged=0; /* Re-initialize the variable at 0 to simulate the logout */
@@ -196,18 +194,4 @@ int serve_the_client()
 			serve_the_client();
 		}
 	}
-}
-
-/* 
-	Function that returns the ID of the client on which I want to do an operation.
-		This is possible by checking the PID of the process that invokes this function.
-*/
-int getcurrentid()
-{
-	for(int j=0; j<id_counter[AUTHCOUNTER]; j++){	
-		if(user[j].pid == getpid())
-			return user[j].usrid;
-	}
-
-	return -1;	
 }
