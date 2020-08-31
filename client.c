@@ -15,7 +15,7 @@
 int sfd;
 
 void DieWithError(char *message);
-void communication(int sfd);
+void communication();
 
 int main(int argc, char *argv[])
 {
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 
 	for(;;)
 	{
-		communication(sfd);
+		communication();
 	}
 
 	close(sfd); /* Close the connection and destroy the socket */
@@ -58,7 +58,7 @@ void DieWithError(char *message)
 }
 
 /* Function used to send and receive messages from the server */
-void communication(int sfd)
+void communication()
 {
 	int bytereceived=0;
 	char response[1000], input[BUFFSIZE];		/* IMPORTANTE -> CAMBIA SIZE */

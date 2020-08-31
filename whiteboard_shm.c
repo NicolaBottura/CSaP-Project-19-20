@@ -1,19 +1,17 @@
 #include "whiteboard.h"
 
-#define SIZE 1000	/* !!!Provvisorio!!! */
-
 int init_shm(int perms)
 {
 	/* Shared memory for both structures and an id counter for the clients */
-	if((shmid_counter=shmget(SHMKEY_C, 16, perms)) < 0)	/* Size di un array da 3 = 12 - mettere a posto */
+	if((shmid_counter=shmget(SHMKEY_C, COUNTSIZE, perms)) < 0)	/* Size di un array da 3 = 12 - mettere a posto */
 		DieWithError("shmget()#1 failed\n");
-	if((shmid_auth=shmget(SHMKEY_A, SIZE, perms)) < 0)
+	if((shmid_auth=shmget(SHMKEY_A, SHMSIZE, perms)) < 0)
 		DieWithError("shmget()#2 failed\n");
-	if((shmid_topics=shmget(SHMKEY_T, SIZE, perms)) < 0)
+	if((shmid_topics=shmget(SHMKEY_T, SHMSIZE, perms)) < 0)
 		DieWithError("shmget()#3 failed\n");
-	if((shmid_thread=shmget(SHMKEY_TH, SIZE, perms)) < 0)
+	if((shmid_thread=shmget(SHMKEY_TH, SHMSIZE, perms)) < 0)
 		DieWithError("shmget()#4 failed\n");
-	if((shmid_msg=shmget(SHMKEY_M, SIZE, perms)) < 0)
+	if((shmid_msg=shmget(SHMKEY_M, SHMSIZE, perms)) < 0)
 		DieWithError("shmget()#5 failed\n");
 
 	// Definire numero massimo di topics (?)

@@ -15,13 +15,13 @@
 #include <sys/sem.h>
 #include <time.h>
 
-#define BUFFSIZE 256
-
 /* Stuff for files in utils.c */
+#define BUFFSIZE 256
 char buff[BUFFSIZE];
+
 #define ANSSIZE 3	/* Max size of certain client's answers will be a double digit numer + \n */
 #define MENU "****** WHITEBOARD MENU ******\n \
-1) Create a topic\n \
+1) Create a new topic\n \
 2) List topics\n \
 3) Delete a topic\n \
 4) Reply to a thread\n \
@@ -30,7 +30,8 @@ char buff[BUFFSIZE];
 7) Subscribe to a topic\n \
 8) Show unread messages\n \
 9) Unsubscribe a topic\n \
-0) Quit\n"
+10) Quit\n\n \
+CHOOSE A NEW OPERATION: "
 
 /* Stuff for the Socket creation/management - whiteboard_sock.c */
 #define DOMAIN AF_INET
@@ -39,13 +40,15 @@ char buff[BUFFSIZE];
 #define MAXPENDING 5
 
 /* Stuff for shared memory creation/management - whiteboard_shm.c */
-// RICORDA DI DEFINIRE LA SIZE DELLA SHM = SIZEOF(STRUCT)
+// RICORDA DI DEFINIRE LA SIZE DELLA SHM = SIZEOF(STRUCT)send
 #define SHMPERM 0600		/* Perms for the shared memory segments */
 #define SHMKEY_A 0x11111	/* Authentication */
 #define SHMKEY_T 0x22222	/* Topics */
 #define SHMKEY_C 0x33333	/* ID Counter for users and topics */
 #define SHMKEY_TH 0x44444	/* Threads */
 #define SHMKEY_M 0x55555	/* Messages */
+#define SHMSIZE 1000		/* Size of the structs in the shared memory */
+#define COUNTSIZE 16		/* Size for the array for the 4 counters stored in the shared memory */
 
 int shmid_auth;
 int shmid_topics;

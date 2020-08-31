@@ -4,125 +4,115 @@ int serve_the_client();
 
 int main(int argc, char *argv[])
 {
-	unsigned short port;	/* Port on which the Server listen */
-	int child_counter=0,	/* Child processes counter */
-	semvals[NUMSEM],		/* Array to manage semaphores */
-	topic_file_size;
-	pid_t pid;				/* Variable to store return value of fork() */
-	FILE *fd;
+	unsigned short port;					/* Port on which the Server listen */
+	int semvals[NUMSEM];					/* Array to manage semaphores */
+	pid_t pid;								/* Variable to store return value of fork() */
 
 	if(argc != 2)
 		DieWithError("Usage: ./server <listening-port>\n");
 
-	if(signal(SIGINT, sigint) < 0)			/* If ctrl+c while running it calls an handler defined in utils.c*/
+	if(signal(SIGINT, sigint) < 0)			/* If ctrl+c while running it calls an handler defined in utils.c */
 		DieWithError("signal() failed\n");
 
-	semvals[SEMAUTH] = 1;
-	semvals[SEMTOPICS] = 1;
+	semvals[SEMAUTH] = 1;					/* Set the value for the sem used to authentication */
+	semvals[SEMTOPICS] = 1;					/* Set the value for the sem used for topic/threads/msgs' related operations */
 
-	if(get_sem(SEMPERM | IPC_CREAT) < 0)
+	if(get_sem(SEMPERM | IPC_CREAT) < 0)	/* Call at the function that creates the semaphores */
 		DieWithError("get_sem() failed\n");
 	
-	if(init_sem(semvals) < 0)
+	if(init_sem(semvals) < 0)				/* Call at the function that initialize the sempahores */
 		DieWithError("init_sem() failed\n");
 
 	if(init_shm(SHMPERM | IPC_CREAT) < 0)	/* Initialize the shared memory portion */
 		DieWithError("init_shm() failed\n");
 
-	port=atoi(argv[1]);						/* Get the port passed we the server program is launched */
+	port=atoi(argv[1]);						/* Get the port number passed as argument */
 	server_socket=create_socket(port); 		/* Create the socket for communiations with clients */
 
-	id_counter[AUTHCOUNTER]=0;				/* Set the value of the id_counter(which is global and in shm) to 0 */
-	load_users();
-	load_utils();
+	load_users();							/* Load all the users from file */
+	load_utils();							/* Load utilities - subscriptions/unread msgs - from file */	
 	load_topics();							/* Load all the topics from file */
 	load_threads();							/* Load all the threads from file */
 	load_messages();						/* Load all the messagtes from file */
 
-	for(;;)	/* Run forever */
+	for(;;)												/* Run forever */
 	{
-		client_socket=accept_connection(server_socket);
+		client_socket=accept_connection(server_socket);	/* Call at the function that accept connections from clients */
 		
-		switch(pid=fork())
+		switch(pid=fork())								/* Fork a new (child) process */
 		{
-			case 0:		/* CHILD */
+			case 0:										/* Child process */
 			{
-				p(SEMAUTH);		/* sem-1 for AUTH */
-				authentication(client_socket); /* Send the authentication form and if the login is successful, send the menu */
-				v(SEMAUTH);		/* sem+1 for AUTH */
+				/* The authentication is blocking in order to make the clients authenticate only one at time */
+				p(SEMAUTH);								/* sem-1 for AUTH */
+				authentication(client_socket); 			/* Send the authentication form to the client */
+				v(SEMAUTH);								/* sem+1 for AUTH */
 
-				serve_the_client();		/* Print the MENU and manage the operations called by the clients */
+				serve_the_client();						/* Print the MENU and manage the operations called by the clients */
 
-				//user->logged=0; /* Re-initialize the variable at 0 to simulate the logout */
-				exit(0);
+				exit(0);								/* "Kill" the child spawned before */
 			}
-			case -1:	/* Error */
+			case -1:
 				DieWithError("fork() failed\n");
 		}
 
-		close(client_socket);	/* After the child exit, close its socket */
-		child_counter++;		/* Increment the number of pending child processes */
-
-		while(child_counter)
-		{
-			pid = waitpid((pid_t) -1, NULL, WNOHANG);	/* Non-blocking wait */
-			if(pid < 0)									/* If error of waitpid() */
-				DieWithError("waitpid() failed\n");
-			else if(pid == 0)							/* No zombies to wait on */
-				break;
-			else
-				child_counter--;						/* Reduce by 1 the number of childs once one is dead */
-		}
+		close(client_socket);							/* After the child exit, close its socket */
 	}
-
-	return 0; /* Never reaches this section so I don't even write the close(server_sorcket) here */
+	
+	return 0;
 }
 
+/*
+	Function that sends to the clients the MENU containing the list of possible operations
+		and then, with a switch, manages all the functionalities.
+	When a case ends, a recursive call to this function is made in order to send again the
+		MENU to the client until it exits from the program.
+*/
 int serve_the_client()
 {
-	int operation=0,								/* Operation that the client will chose from the MENU */
-	current_id=0;										/* ID of the client on which I want to do an operation */;
-	char op[ANSSIZE];
+	int operation=0,									/* Operation that the client will chose from the MENU */
+	current_id=0;										/* ID of the client that's executing the operations in this moment */;
+	char op[ANSSIZE];									/* Buffer used as return value of ping() function */
 
-	strcpy(op, ping(client_socket, MENU, ANSSIZE));		/* Send the MENU to the client */
+	strcpy(op, ping(client_socket, MENU, ANSSIZE));		/* Send the MENU to the client and receive the choosen operation */
 	operation = strtol(op, NULL, 0); 					/* Convert the client's answer in integer */
 
 	switch(operation)									/* Switch-case based on the choice of the client */
 	{
-		case 1:											/* Create a new topic */
+		case 1:											/* CREATE A NEW TOPIC*/
 		{
- 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+ 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 			
-			p(SEMTOPICS);
-			create_topics(client_socket, current_id);	/* Create a new topic - whiteboard_topics.c */
-			v(SEMTOPICS);
+			p(SEMTOPICS);								/* sem-1 for TOPICS */
+			create_topics(client_socket, current_id);	/* Create a new topic - LOCATION: whiteboard_topics.c */
+			v(SEMTOPICS);								/* sem+1 for TOPICS */
 
 			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
-		case 2:											/* List all the topics */
+		case 2:											/* LIST TOPICS */
 		{
-			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
-			list_topics(client_socket, current_id);					/* list all the topics */	
+			list_topics(client_socket, current_id);		/* list all the topics presents in the struct */
 
 			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
-		case 3:											/* Delete a topic */
+		case 3:											/* DELETE A TOPIC */
 		{
-			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
-			p(SEMTOPICS);								/* Mi serve davvero il semaforo? Non posso essere loggato con lo stesso client in due sessioni diverse e se non sono owner non cancello */
-			delete_topic(client_socket, current_id);	/* Checkare prima dell'auth che l'utente con le credenziali che voglio non sia gia' loggato */
+			p(SEMTOPICS);								
+			delete_topic(client_socket, current_id);	
 			v(SEMTOPICS);
 
 			serve_the_client(); //NOTA: faccio senza passare client_socket perche' e' global
 		}
 		case 4:											/* Reply to a thread(write a message) */
 		{
-			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
 			p(SEMTOPICS);								/* Can't write a new message, if someone is deleting the topic the message will remain with no topic's references */
@@ -133,7 +123,7 @@ int serve_the_client()
 		}
 		case 5:											/* Append a new thread to a topic */
 		{
-			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
 			p(SEMTOPICS);								/* If someone is deleting a topic I can't append a new thread or it will remain with no topic's references */
@@ -144,7 +134,7 @@ int serve_the_client()
 		}
 		case 6:											/* List all threads and related messages */
 		{
-			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 				
 			display_topic_content(client_socket, current_id);
@@ -153,7 +143,7 @@ int serve_the_client()
 		}
 		case 7:											/* Subscribe to a topic */
 		{
-			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
 			subscribe(client_socket, current_id);
@@ -162,7 +152,7 @@ int serve_the_client()
 		}
 		case 8:											/* Show unread messages */
 		{
-			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
 			show_unread(client_socket, current_id);
@@ -171,20 +161,23 @@ int serve_the_client()
 		}
 		case 9:											/* Unsubscribe from a topic */
 		{
-			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
 			unsubscribe(client_socket, current_id);
 
 			serve_the_client();
 		}
-		case 0:
+		case 10:
 		{	
-			if((current_id=getcurrentid()) < 0)			/* Get the ID of the client - needed in whiteboard_topics.c */
+			char res[] = "Exiting the program\nBYE!";
+
+			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
 			user[current_id].logged=0;
-			ping(client_socket, "Exiting the program\nBYE!", 0);
+
+			send(client_socket, res, sizeof(res), 0);
 			close(client_socket);
 			exit(0);	
 		}

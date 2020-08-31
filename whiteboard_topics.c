@@ -153,14 +153,15 @@ int list_topics(int client_socket, int current_id)
 				}
 				else if(user[current_id].topics_sub[i] != topic[j].topicid && i == MAXSUBS-1)
 					size=asprintf(&res, "ID: %d\tStatus: NOT SUBSCRIBED\nCreator: %s\nTopic Name: %s\n\n", topic[j].topicid, topic[j].creator, topic[j].name);
-			
+
 			send(client_socket, res, size, 0);
+			//ping(client_socket, res, ANSSIZE);
+			free(res);
 		}
 	}
-	
 	ping(client_socket, "Press ENTER to continue", ANSSIZE);
-
-	free(res);
+	// 136 bytes muore
+	//free(res);
 
 	return 0;
 }

@@ -22,7 +22,7 @@ int load_users()
 	fclose(fd);
 
 	return 0;
-}
+}			// TOGLI LA PASSWORD IN CHIARO QUANDO L'UTENTE SI LOGGA
 
 /*
 	Load all the unread messages IDs and the subscribed topics for each user.
@@ -123,11 +123,12 @@ int authentication(int client_socket)
 			user[j].logged=1;						/* If login was successful.. */
 			user[j].usrid=j;						/* set the client ID equal to the value of the counter */
 			user[j].pid=getpid();					/* set the PID equal to the PID of process who is managing this client */
-			ping(client_socket, "Login Successful!\nPress ENTER to continue", ANSSIZE);		/* and send it to the client waiting for a 1 digit char */
 
+			//ping(client_socket, "Login Successful!\nPress ENTER to continue", ANSSIZE);		/* and send it to the client waiting for a 1 digit char */
 			return 0;
 		}
-	
+
+
 	ping(client_socket, "Login Failed!", 0);
 
 	return -1;

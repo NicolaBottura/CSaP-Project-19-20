@@ -41,7 +41,7 @@ char *ping(int client_socket, char *message, int reponse_len)
 	if((bytesreceived=recv(client_socket, buff, sizeof(buff), 0)) < 0)
 		DieWithError("recv() failed\n");
 	
-	buff[bytesreceived]='\0';
+	buff[bytesreceived]='\0'; // FORSE E' -1
 
 	if(strlen(buff) > reponse_len || bytesreceived <= 0)		/* +1 because there is the \n at the end */
 	{
