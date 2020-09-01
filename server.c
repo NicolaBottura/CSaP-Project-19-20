@@ -173,21 +173,14 @@ int serve_the_client()
 		}
 		case 10:										/* QUIT */
 		{	
-			char res[] = "Exiting the program\nBYE!";
-
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
 			user[current_id].logged=0;					/* The client will result as not logged in */
 
-			send(client_socket, res, sizeof(res), 0);
+			ping(client_socket, "Exiting the program\nBYE!", 0);
 			close(client_socket);
 			exit(1);
-			/* 
-				NOTE: after choosing this option, if the server exits(ctrl+c), the port will remain in TIME_WAIT.
-					This means that the local endpoint has closed the connection and the connection is being kept around
-						so that any delayed packets can be matched to the connection handled - wait for 4 minutes.
-			*/
 		}
 		default:										/* If the user enter a number not between 1 and 10 or something else */
 		{

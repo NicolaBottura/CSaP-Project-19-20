@@ -126,38 +126,51 @@ typedef struct messages {
 } msg;
 msg *message;
 
-/* Prototypes */
+/* -- utils.c -- */
 void DieWithError(char *message);
 void sigint(int signal);
+char *ping(int client_socket, char *message, int response_len);
+int getcurrentid();
+
+/* -- whiteboard_shm.c -- */
 int init_shm(int perms);
 int remove_shm();
+
+/* -- whiteboard_sem.c -- */
 int get_sem(int perms);
 int init_sem(int semvals[]);
 int remove_sem();
 int p(int semnum);
 int v(int semnum);
-char *ping(int client_socket, char *message, int response_len);
-int getcurrentid();
+
+/* -- whiteboard_sock.c -- */
 int create_socket(unsigned short port);
 int accept_connection(int server_socket);
-int load_users();
+
+/* -- whiteboard_auth.c -- */
+void load_users();
 void load_utils();
 void write_utils();
 int authentication(int client_socket);
 int check_if_logged(char name[]);
-int create_topics(int client_socket, int current_id);
-int list_topics(int client_socket, int current_id);
-int load_topics();
-int write_topics();
-int delete_topic(int client_socket, int current_id);
-int load_threads();
-int write_threads();
-int append(int client_socket, int current_id);
-int load_messages();
-int write_messages();
-int reply(int client_socket, int current_id);
-int display_topic_content(int client_socket, int current_id);
-int gettopicid(int id);
-int subscribe(int client_socket, int current_id);
-void show_unread(int client_socket, int current_id);
+
+/* -- whiteboard_topics.c -- */
+void create_topics(int client_socket, int current_id);
+void list_topics(int client_socket, int current_id);
+void load_topics();
+void write_topics();
+void delete_topic(int client_socket, int current_id);
+void subscribe(int client_socket, int current_id);
 int unsubscribe(int client_socket, int current_id);
+
+/* -- whiteboard_threads.c -- */
+void load_threads();
+void write_threads();
+void append(int client_socket, int current_id);
+
+/* -- whiteboard_messages.c -- */
+void load_messages();
+void write_messages();
+void reply(int client_socket, int current_id);
+void display_topic_content(int client_socket, int current_id);
+void show_unread(int client_socket, int current_id);

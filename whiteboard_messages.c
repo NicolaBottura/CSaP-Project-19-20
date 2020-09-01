@@ -1,6 +1,6 @@
 #include "whiteboard.h"
 
-int load_messages()
+void load_messages()
 {
 	FILE *fd;
 	struct stat st;
@@ -14,24 +14,23 @@ int load_messages()
 		size=st.st_size;
 
 	/* Read the file of the topics saved and load them in an array of struct for the topics */
-	if(size>1)
-		while((fscanf(fd, "%s %s %s %[^\n]", tmp1, tmp2, creator, content)) > 0)
-		{
-			id_counter[MSGCOUNTER] = strtol(tmp1, NULL, 0);
-			message[id_counter[MSGCOUNTER]].msgid=id_counter[MSGCOUNTER];
-			message[id_counter[MSGCOUNTER]].threadid=strtol(tmp2, NULL, 0);	/* Get from the the file the ID of the topic */
-			strcpy(message[id_counter[MSGCOUNTER]].creator, creator);
-			strcpy(message[id_counter[MSGCOUNTER]].content, content);
-		}
+	while((fscanf(fd, "%s %s %s %[^\n]", tmp1, tmp2, creator, content)) > 0)
+	{
+		id_counter[MSGCOUNTER] = strtol(tmp1, NULL, 0);
+		message[id_counter[MSGCOUNTER]].msgid=id_counter[MSGCOUNTER];
+		message[id_counter[MSGCOUNTER]].threadid=strtol(tmp2, NULL, 0);	/* Get from the the file the ID of the topic */
+		strcpy(message[id_counter[MSGCOUNTER]].creator, creator);
+		strcpy(message[id_counter[MSGCOUNTER]].content, content);
+	}
 
 	id_counter[MSGCOUNTER]+=1;				/* +1 the number of messages */
 
 	fclose(fd);
 
-	return 0;
+	return ;
 }
 
-int write_messages()
+void write_messages()
 {
 	FILE *fd;
 	
@@ -44,7 +43,7 @@ int write_messages()
 
 	fclose(fd);
 
-	return 0;
+	return ;
 }
 
 /* 
@@ -52,7 +51,7 @@ int write_messages()
 		Ask the client which thread he wants to reply to(asking the ID) and
 			create a new instance of an array of struct of messages with inside the ID of the thread.
 */
-int reply(int client_socket, int current_id)
+void reply(int client_socket, int current_id)
 {
 	char id_char[ANSSIZE];
 	int id, contentlen;
@@ -66,7 +65,7 @@ int reply(int client_socket, int current_id)
 		else if(user[current_id].topics_sub[j] != id && j == MAXSUBS-1)
 		{
 			ping(client_socket, "You are not subscribed to the topic of this thread!\nPress ENTER to continue", ANSSIZE);
-			return 0;
+			return ;
 		}
 
 	for(int j=0; j<id_counter[THREADCOUNTER]; j++)	/* Check that the ID of the topic exists */
@@ -74,7 +73,7 @@ int reply(int client_socket, int current_id)
 		if(id >= id_counter[THREADCOUNTER] || (thread[j].threadid != id && j==id_counter[THREADCOUNTER]-1) || id <= 0)
 		{
 			ping(client_socket, "This thread does not exist!\nPress ENTER to continue!", ANSSIZE);
-			return 0;
+			return ;
 		}
 		else if(thread[j].threadid == id)
 		{
@@ -101,7 +100,7 @@ int reply(int client_socket, int current_id)
 
 			ping(client_socket, "Message added!\nPress ENTER to continue", ANSSIZE);
 
-			return 0;
+			return ;
 		}
 	}
 }
@@ -117,7 +116,7 @@ int reply(int client_socket, int current_id)
 			2.1) Display every unread message with their content - formnat: creator:content
 			2.2) Display a specific message by entering its ID
 */
-void show_unread(int client_socket, int current_id)			// O NON CANCELLA BENE O SI SBRAGA QUA
+void show_unread(int client_socket, int current_id)
 {
 	int counter=0, size1, size2, operation, pos, id;
 	char *tmp1, *tmp2, op[ANSSIZE], id_char[ANSSIZE];
@@ -213,7 +212,7 @@ void show_unread(int client_socket, int current_id)			// O NON CANCELLA BENE O S
 	Format:	Thread-ID Thread-name Thread-creator Topic-name Thread-Content
 					Message-ID Message-creator:Message-Content
 */
-int display_topic_content(int client_socket, int current_id)	/* mi serve perche' se mi iscrivo dopo ad un topic, non ho i messaggi nell'unread msg e quindi posso visualizzare comunque tutto */
+void display_topic_content(int client_socket, int current_id)	/* mi serve perche' se mi iscrivo dopo ad un topic, non ho i messaggi nell'unread msg e quindi posso visualizzare comunque tutto */
 {
 	char *res1, *res2;				// IMPORTANTE, METTI TUTTI I MESSAGGI COME READ
 	struct stat st;
@@ -227,14 +226,14 @@ int display_topic_content(int client_socket, int current_id)	/* mi serve perche'
 		if(thread[j].threadid == 0 && j == id_counter[THREADCOUNTER]-1)	/* Check if there are topics stored */
 		{
 			ping(client_socket, "No threads to show!\nPress ENTER to continue", ANSSIZE);
-			return 0;
+			return ;
 		}
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)	/* Check that the ID of the topic exists */
 		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0)
 		{
 			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
-			return 0;
+			return ;
 		}
 		else if(topic[j].topicid == id)
 		{
@@ -262,24 +261,14 @@ int display_topic_content(int client_socket, int current_id)	/* mi serve perche'
 						}
 
 					ping(client_socket, "Press ENTER to continue", ANSSIZE);
-					return 0;
+					return ;
 				}
 				else if(user[current_id].topics_sub[i] != id && i == MAXSUBS-1)
 				{
 					ping(client_socket, "You can't see topics you're not subscribed to!\nPress ENTER to continue", ANSSIZE);
-					return 0;
+					return ;
 				}
 			
 			//return 0;	/* Without this here, it will execute another round in the for and print the topic not existing message */
 		}	
-}
-
-/* 
-	Get the ID of a certain topic based on the id of the thread passed in input.
-*/
-int gettopicid(int id)
-{
-	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
-		if(id == topic[j].topicid)
-			return topic[j].topicid;
 }

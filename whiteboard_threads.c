@@ -3,7 +3,7 @@
 /*
 	Load all the topics stored in the backup file in an array of structs for the topics.
 */
-int load_threads()
+void load_threads()
 {
 	FILE *fd;
 	struct stat st;
@@ -17,25 +17,24 @@ int load_threads()
 		size=st.st_size;
 
 	/* Read the file of the topics saved and load them in an array of struct for the topics */
-	if(size>1)
-		while((fscanf(fd, "%s %s %s %s %[^\n]", tmp1, tmp2, username, name, content)) > 0)
-		{
-			id_counter[THREADCOUNTER] = strtol(tmp1, NULL, 0);
-			thread[id_counter[THREADCOUNTER]].threadid=id_counter[THREADCOUNTER];
-			thread[id_counter[THREADCOUNTER]].topicid = strtol(tmp2, NULL, 0);
-			strcpy(thread[id_counter[THREADCOUNTER]].creator, username);
-			strcpy(thread[id_counter[THREADCOUNTER]].name, name);
-			strcpy(thread[id_counter[THREADCOUNTER]].content, content);
-		}
+	while((fscanf(fd, "%s %s %s %s %[^\n]", tmp1, tmp2, username, name, content)) > 0)
+	{
+		id_counter[THREADCOUNTER] = strtol(tmp1, NULL, 0);
+		thread[id_counter[THREADCOUNTER]].threadid=id_counter[THREADCOUNTER];
+		thread[id_counter[THREADCOUNTER]].topicid = strtol(tmp2, NULL, 0);
+		strcpy(thread[id_counter[THREADCOUNTER]].creator, username);
+		strcpy(thread[id_counter[THREADCOUNTER]].name, name);
+		strcpy(thread[id_counter[THREADCOUNTER]].content, content);
+	}
 
 	id_counter[THREADCOUNTER]+=1;
 
 	fclose(fd);
 
-	return 0;
+	return ;
 }
 
-int write_threads()
+void write_threads()
 {
 	FILE *fd;
 	
@@ -50,13 +49,13 @@ int write_threads()
 
 	fclose(fd);
 
-	return 0;
+	return ;
 }
 /*
 	Function used to append a new message(thread content) to a new thread under a specific topic.
 		Ask for the topic ID, write the name and the content of this thread.
 */
-int append(int client_socket, int current_id)
+void append(int client_socket, int current_id)
 {
 	char id_char[ANSSIZE];
 	int id, namelen, contentlen;
@@ -70,7 +69,7 @@ int append(int client_socket, int current_id)
 		else if(user[current_id].topics_sub[j] != id && j == MAXSUBS-1)
 		{
 			ping(client_socket, "You are not subscribed to this topic!\nPress ENTER to continue", ANSSIZE);
-			return 0;
+			return ;
 		}
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)	/* Check that the ID of the topic exists */
@@ -78,7 +77,7 @@ int append(int client_socket, int current_id)
 		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0)
 		{
 			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
-			return 0;
+			return ;
 		}
 		else if(topic[j].topicid == id)
 		{
@@ -98,7 +97,7 @@ int append(int client_socket, int current_id)
 
 			ping(client_socket, "Thread created!\nPress ENTER to continue", ANSSIZE);
 
-			return 0;
+			return ;
 		}
 	}
 }

@@ -4,7 +4,7 @@
 	Load all the credentials in the array of struct of the users.
 	(credentials.txt) File format: username password
 */
-int load_users()
+void load_users()
 {
 	FILE *fd;
 
@@ -19,7 +19,7 @@ int load_users()
 
 	fclose(fd);
 
-	return 0;
+	return ;
 }			// TOGLI LA PASSWORD IN CHIARO QUANDO L'UTENTE SI LOGGA
 
 /*
