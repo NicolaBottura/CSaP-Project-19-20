@@ -1,22 +1,20 @@
 #include "whiteboard.h"
 
-//IMPORTANTE -> SE MUOIO NON FACCIO IL LOGOUT QUINTI LOGGED=0 E NON POSSO PIU ENTRARE
-
 /*
-	Load all the credentials in the array of struct for the users
-	file format: username password
+	Load all the credentials in the array of struct of the users.
+	(credentials.txt) File format: username password
 */
 int load_users()
 {
-	FILE *fd;;
+	FILE *fd;
 
-	if((fd=fopen(CREDFILE, "r")) < 0)
+	if((fd=fopen(CREDFILE, "r")) < 0)						/* Open the file in READ mode */
 		DieWithError("open() in load_users()) failed\n");
 
 	while((fscanf(fd, "%s %s", user[id_counter[AUTHCOUNTER]].username, user[id_counter[AUTHCOUNTER]].password)) > 0)
 	{
-		user[id_counter[AUTHCOUNTER]].logged=0;	
-		id_counter[AUTHCOUNTER]+=1;
+		user[id_counter[AUTHCOUNTER]].logged=0;				/* Set all the user as not logged in */
+		id_counter[AUTHCOUNTER]+=1;							/* Increment the counter for the users by 1 */
 	}
 
 	fclose(fd);
@@ -25,9 +23,9 @@ int load_users()
 }			// TOGLI LA PASSWORD IN CHIARO QUANDO L'UTENTE SI LOGGA
 
 /*
-	Load all the unread messages IDs and the subscribed topics for each user.
-	Format for the subscriptions: 1 2 0 ... if(ID>0)real_topic(TRUE)
-	Formato for the unread: 0 0 4 0 5 6 ... same as above
+	Load all the unread-message IDs and the subscribed topics for each user.
+	(subscriptions.txt) Format for the subscriptions:	1 2 0 6... if(ID>0); existing(topic)=TRUE;
+	(unread_msg.txt) Formato for the unread: 			0 0 4 0 5 6 ... same as above
 */
 void load_utils()
 {
@@ -35,19 +33,17 @@ void load_utils()
 	struct stat st;
 	int size;
 
-	if((fd1=fopen(SUBFILE, "r")) < 0)		/* Open the file and overwrite the content with the new one */
+	if((fd1=fopen(SUBFILE, "r")) < 0)						/* Open the file in READ mode */
 		DieWithError("open() in write_users() failed\n");
 	
-	if((fd2=fopen(UNREADMSG, "r")) < 0)		/* Open the file and overwrite the content with the new one */
+	if((fd2=fopen(UNREADMSG, "r")) < 0)						/* Open the file in READ mode */
 		DieWithError("open() in write_users() failed\n");
 
-	// AGGIUNGI CHECK SIZE
-	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
-		for(int i=0; i<MAXSUBS; i++)	/* load the topics subscribed by this user */
-			fscanf(fd1, "%d", &user[j].topics_sub[i]);
+	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)			/* For each user */
+		for(int i=0; i<MAXSUBS; i++)						/* for each possible subscription */
+			fscanf(fd1, "%d", &user[j].topics_sub[i]);		/* load the topic subscribed by the user */
 	
-	// AGGIUNGI CHECK SIZE
-	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
+	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)			/* Same as above but for unread messages */
 		for(int i=0; i<MAXUNREAD; i++)
 			fscanf(fd2, "%d", &user[j].unread_msg[i]);
 
@@ -58,28 +54,30 @@ void load_utils()
 }
 
 /*
-	Write in the related file the IDs for the topic subscribed and messages unread for each user.
-	NOTE: I prefer to not modify the credentials file overwriting it with the credentials for security reasonon,
-		so it will be always the same at each run of the program.
+	Write in the related file the IDs for the topics subscribed and messages unread for each user.
+	NOTE: I prefer to not modify the credentials file overwriting it with the credentials for security reasons,
+		so it will be always the same at each run of the program and the write will happen only when the server crashes
+			so, not everytime I add/remove something from the structs because opening and closing the files multiple times will
+				produce too much overhead.
 */
 void write_utils()
 {
 	FILE *fd1, *fd2;
 
-	if((fd1=fopen(SUBFILE, "w")) < 0)		/* Open the file and overwrite the content with the new one */
+	if((fd1=fopen(SUBFILE, "w")) < 0)						/* Open the file in WRITE mode */
 		DieWithError("open() in write_users() failed\n");
 	
-	if((fd2=fopen(UNREADMSG, "w")) < 0)		/* Open the file and overwrite the content with the new one */
+	if((fd2=fopen(UNREADMSG, "w")) < 0)						/* Open the file in WRITE mode */
 		DieWithError("open() in write_users() failed\n");
 
-	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
+	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)			/* For each user */
 	{
-		for(int i=0; i<MAXSUBS; i++)	/* write the topics subscribed by this user */
-			fprintf(fd1, "%d ", user[j].topics_sub[i]);
+		for(int i=0; i<MAXSUBS; i++)						/* for each possible subscription */
+			fprintf(fd1, "%d ", user[j].topics_sub[i]);		/* write in the file the id of the topics inside the array */
 		fprintf(fd1, "\n");
 	}
 
-	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
+	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)			/* Same as above for the unread messages */
 	{
 		for(int i=0; i<MAXUNREAD; i++)
 			fprintf(fd2, "%d ", user[j].unread_msg[i]);
@@ -93,20 +91,18 @@ void write_utils()
 }
 
 /* 
-	Function used to authenticate the users once they connect to the server's listening socket.
-		Ask for username and password using the function pong() defined in utils.c which just
-			send a message and receive the client's answer.		
+	Function used to authenticate the users once they connect to the server listening socket and called in server.c.
+	Ask for username and password using the function ping() defined in utils.c which just
+		send a message and return the client's answer.
 */
 int authentication(int client_socket)
 {
 	char name[AUTHLEN], passwd[AUTHLEN];
 	int namelen, passlen;
 
-	user[id_counter[AUTHCOUNTER]].logged=0;
-
-	/* Send to the client the string to ask a username and copy the answer inside the variables */
+	/* Send to the client the string to ask a username and copy the answer inside the variables(same for password) */
 	strcpy(name, ping(client_socket, "*** Welcome to Whiteboard ***\nUsername: ", AUTHLEN));
-	strcpy(passwd, ping(client_socket, "Password: ", AUTHLEN));	/* Send to the client the string to ask a password */
+	strcpy(passwd, ping(client_socket, "Password: ", AUTHLEN));
 
 	/* Remove the '\n' from the user's input credentials */
 	namelen=strlen(name);
@@ -114,29 +110,31 @@ int authentication(int client_socket)
 	passlen=strlen(passwd);
 	passwd[passlen-1]=0;
 
-	if(check_if_logged(name) < 0)
-		DieWithError("This user is already logged\n");
+	if(check_if_logged(name) < 0)							/* Check if the user with the name provided is alreay logged in */
+		DieWithError("This user is already logged\n");		/* If it returns a value < 0 means that the user is already logged, so, call DieWithError to kill the client */
 
-	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
-		if((strcmp(name, user[j].username) == 0) && ((strcmp(passwd, user[j].password) == 0)))
+	for(int j=0; j<id_counter[AUTHCOUNTER]; j++)			/* For each user in the struct, check if the username and password provided match with an existing pair */
+		if((strcmp(name, user[j].username) == 0) && (strcmp(passwd, user[j].password) == 0))
 		{
-			user[j].logged=1;						/* If login was successful.. */
-			user[j].usrid=j;						/* set the client ID equal to the value of the counter */
-			user[j].pid=getpid();					/* set the PID equal to the PID of process who is managing this client */
+			user[j].logged=1;								/* If login was successful set the user as logged */
+			user[j].usrid=j;								/* set the client ID equal to the value of the counter */
+			user[j].pid=getpid();							/* set the pid equal to the PID of process who is managing this client */
 
-			//ping(client_socket, "Login Successful!\nPress ENTER to continue", ANSSIZE);		/* and send it to the client waiting for a 1 digit char */
-			return 0;
+			return 0;										/* The just return */
 		}
 
 
-	ping(client_socket, "Login Failed!", 0);
+	ping(client_socket, "Login Failed!", 0);				/* Otherwise send the response to the client */
 
 	return -1;
 }
 
 /*
-	Check if the user with the name passed is already logged, 
-		if yes, send the Login Failed string and exit
+	Check if the user with the name passed is already logged, by checking its user[j].logged variable.
+	If yes, send the Login Failed string and exit.
+
+	The response from the server, if the user is already logged, is the same as if the credentials were wrong to
+		try to mitigate possible brute-force attacks to the login system by harvesting the response from the server.
 */
 int check_if_logged(char name[])
 {
@@ -144,7 +142,6 @@ int check_if_logged(char name[])
 		if(strcmp(user[j].username, name) == 0 && user[j].logged == 1)
 		{
 			ping(client_socket, "Login Failed!", 0);
-			v(SEMAUTH);		/* sem+1 for AUTH */
 			return -1;
 		}
 

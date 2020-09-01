@@ -18,7 +18,7 @@ void sigint(int signal)
 	close(client_socket);
 	
 	printf("Signal %d occurred, exiting.\n", signal);
-	exit(0);
+	exit(1);
 }
 
 /* Function used to send a message back to the client through the socket 
@@ -53,7 +53,7 @@ char *ping(int client_socket, char *message, int reponse_len)
 		DieWithError("Max length exceeded or connection close on client side\n");
 	}
 
-	//printf("Received: %s\n", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE
+	//printf("Received: %s", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE
 	
 	return buff;
 }

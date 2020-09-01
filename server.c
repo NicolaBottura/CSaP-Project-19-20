@@ -45,7 +45,8 @@ int main(int argc, char *argv[])
 			{
 				/* The authentication is blocking in order to make the clients authenticate only one at time */
 				p(SEMAUTH);								/* sem-1 for AUTH */
-				authentication(client_socket); 			/* Send the authentication form to the client */
+				if(authentication(client_socket) < 0 )	/* Send the authentication form to the client */
+					DieWithError("Login failed\n");
 				v(SEMAUTH);								/* sem+1 for AUTH */
 
 				serve_the_client();						/* Print the MENU and manage the operations called by the clients */
@@ -104,86 +105,93 @@ int serve_the_client()
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
-			p(SEMTOPICS);								
-			delete_topic(client_socket, current_id);	
-			v(SEMTOPICS);
+			p(SEMTOPICS);								/* sem-1 for TOPICS */
+			delete_topic(client_socket, current_id);	/* Delete a topic from the structure and all the related threads and messages */
+			v(SEMTOPICS);								/* sem+1 for TOPICS */
 
-			serve_the_client(); //NOTA: faccio senza passare client_socket perche' e' global
+			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
-		case 4:											/* Reply to a thread(write a message) */
+		case 4:											/* REPLY TO A THREAD */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
-			p(SEMTOPICS);								/* Can't write a new message, if someone is deleting the topic the message will remain with no topic's references */
-			reply(client_socket, current_id);
-			v(SEMTOPICS);
+			/* Can't write a new message, if someone is deleting the topic the message will remain with no topic's references */
+			p(SEMTOPICS);								/* sem-1 for TOPICS */
+			reply(client_socket, current_id);			/* Append a new message under an existing thread decided by the client */
+			v(SEMTOPICS);								/* sem+1 for TOPICS */
 
-			serve_the_client();
+			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
-		case 5:											/* Append a new thread to a topic */
+		case 5:											/* CREATE A THREAD */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
-			p(SEMTOPICS);								/* If someone is deleting a topic I can't append a new thread or it will remain with no topic's references */
-			append(client_socket, current_id);
-			v(SEMTOPICS);
+			/* If someone is deleting a topic I can't append a new thread or it will remain with no topic's references */
+			p(SEMTOPICS);								/* sem-1 for TOPICS */
+			append(client_socket, current_id);			/* Append a new thread under an existing topic decided by the client */
+			v(SEMTOPICS);								/* sem+1 for TOPICS */
 
-			serve_the_client();
+			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
-		case 6:											/* List all threads and related messages */
+		case 6:											/* DISPLAY A TOPIC CONTENT */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 				
-			display_topic_content(client_socket, current_id);
+			display_topic_content(client_socket, current_id);	/* Display all the threads and messages of a topic decided by the client */
 
-			serve_the_client();
+			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
-		case 7:											/* Subscribe to a topic */
+		case 7:											/* SUBSCRIBE TO A TOPIC */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
-			subscribe(client_socket, current_id);
+			subscribe(client_socket, current_id);		/* Add in the client calling this function the ID of the topic he want to subscribe to */
 
-			serve_the_client();
+			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
-		case 8:											/* Show unread messages */
+		case 8:											/* SHOW UNREAD MESSAGES */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
-			show_unread(client_socket, current_id);
+			show_unread(client_socket, current_id);		/* Check if there are unread messages and then display them */
 
-			serve_the_client();
+			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
-		case 9:											/* Unsubscribe from a topic */
+		case 9:											/* UNSUBSCRIBE A TOPIC */
 		{
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
-			unsubscribe(client_socket, current_id);
+			unsubscribe(client_socket, current_id);		/* Remove from the list of subscribed topics of the client calling this function a topic */
 
-			serve_the_client();
+			serve_the_client();							/* Repeat this function to make the client execute another operation */
 		}
-		case 10:
+		case 10:										/* QUIT */
 		{	
 			char res[] = "Exiting the program\nBYE!";
 
 			if((current_id=getcurrentid()) < 0)			/* Get the ID of the current client - LOCATION: utils.c */
 				DieWithError("getcurrentid() failed\n");
 
-			user[current_id].logged=0;
+			user[current_id].logged=0;					/* The client will result as not logged in */
 
 			send(client_socket, res, sizeof(res), 0);
 			close(client_socket);
-			exit(0);	
+			exit(1);
+			/* 
+				NOTE: after choosing this option, if the server exits(ctrl+c), the port will remain in TIME_WAIT.
+					This means that the local endpoint has closed the connection and the connection is being kept around
+						so that any delayed packets can be matched to the connection handled - wait for 4 minutes.
+			*/
 		}
-		default:
+		default:										/* If the user enter a number not between 1 and 10 or something else */
 		{
-			ping(client_socket, "Invalid Option\nPress ENTER to continue", ANSSIZE);	// non funzia
+			ping(client_socket, "Invalid Option\nPress ENTER to continue", ANSSIZE);
 			serve_the_client();
 		}
 	}

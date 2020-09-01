@@ -117,7 +117,7 @@ int reply(int client_socket, int current_id)
 			2.1) Display every unread message with their content - formnat: creator:content
 			2.2) Display a specific message by entering its ID
 */
-void show_unread(int client_socket, int current_id)
+void show_unread(int client_socket, int current_id)			// O NON CANCELLA BENE O SI SBRAGA QUA
 {
 	int counter=0, size1, size2, operation, pos, id;
 	char *tmp1, *tmp2, op[ANSSIZE], id_char[ANSSIZE];

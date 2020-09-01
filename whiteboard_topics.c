@@ -1,54 +1,48 @@
 #include "whiteboard.h"
 
 /*
-	Load all the topics stored in the backup file in an array of structs for the topics.
+	Load all the topics created from the file in which are stored.
+	(topics.txt) File format: ID Creator Content
 */
 int load_topics()
 {
 	FILE *fd;
-	struct stat st;
-	char tmp[ANSSIZE], username[AUTHLEN], name[AUTHLEN];
-	int size;
+	char tmp[ANSSIZE], 														/* Buffer of size 3 used to store the ID taken from file  */
+	username[AUTHLEN], 														/* Buffer used to store the username of the owner taken from file */
+	name[AUTHLEN];															/* Buffer used to store the name of the topic taken from file */
 
-	if((fd=fopen(TOPICSDB, "r")) < 0)
+	if((fd=fopen(TOPICSDB, "r")) < 0)										/* Open the file in READ mode */
 		DieWithError("open() in load_topics() failed\n");
 	
-	if(stat(TOPICSDB, &st) == 0)	/* Get the total length of the file */
-		size=st.st_size;
-
-	/* Read the file of the topics saved and load them in an array of struct for the topics */
-	if(size>1)
-		while((fscanf(fd, "%s %s %s", tmp, username, name)) > 0)
-		{
-			id_counter[TOPICCOUNTER] = strtol(tmp, NULL, 0);
-			topic[id_counter[TOPICCOUNTER]].topicid=id_counter[TOPICCOUNTER];
-			strcpy(topic[id_counter[TOPICCOUNTER]].creator, username);
-			strcpy(topic[id_counter[TOPICCOUNTER]].name, name);
-		}
-	/*else
+	while((fscanf(fd, "%s %s %[^\n]", tmp, username, name)) > 0)			/* Read the file and store the content */
 	{
-		id_counter[TOPICCOUNTER]=0;
-		fclose(fd);
-		return 0;
-	}*/			// mezzo problema, il mio primo topic(quando parto da file vuoto) e' sempre al posto 1, non 0 ma l'id e' giusto, ovvero parte da 1
+		id_counter[TOPICCOUNTER] = strtol(tmp, NULL, 0);					/* Convert the ID from char to int and update the counter for topics */
+		topic[id_counter[TOPICCOUNTER]].topicid=id_counter[TOPICCOUNTER];	/* Set the topicid as the value of the counter */
+		strcpy(topic[id_counter[TOPICCOUNTER]].creator, username);			/* Add the creator */
+		strcpy(topic[id_counter[TOPICCOUNTER]].name, name);					/* and then the name of the topic */
+	}
 
-	id_counter[TOPICCOUNTER]+=1;
-	
+	id_counter[TOPICCOUNTER]+=1;											/* Increment the topic counter - if there are no topics in file it will start from 1, so
+																					in the program I'll always check that the ID of the topic is > 0 */
 	fclose(fd);
 
 	return 0;
 }
 
+/* 
+	Function used to write in the file the topics that are present in the struct.
+	This will be called when the server exits.
+*/
 int write_topics()
 {
 	FILE *fd;
 	
-	if((fd=fopen(TOPICSDB, "w")) < 0)		/* Open the file and overwrite the content with the new one */
+	if((fd=fopen(TOPICSDB, "w")) < 0)										/* Open the file and overwrite the content with the new one */
 		DieWithError("open() in write_topics() failed\n");
 	
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 	{
-		if(topic[j].topicid > 0)	/* Check that the topics exists - if not, the id is = -1 */ // DA CONTROLLARE
+		if(topic[j].topicid > 0)											/* Check that the topics exists - if not, the id is = -1 or 0 */
 			fprintf(fd, "%d %s %s\n", topic[j].topicid, topic[j].creator, topic[j].name); 
 	}
 
@@ -58,7 +52,11 @@ int write_topics()
 }
 /*
 	Function used to create a topic, asking the client for the fields needed to complete the elements in the struct.
-		Uses the function pong() defined in utils.c to send and receive the proper fields.
+	Uses the function ping() defined in utils.c to send and receive the proper fields.
+	When I create a new topic, I also add the user that it's creating it in the subscribed list for this topic.
+	If the number of subscriptions is reached, the user is asked if he wants to unsubscribe another topic or he wants 
+		to continue without subscribing at the new one.
+	This is done through a new menu that is printed once the event occurs.
 */
 int create_topics(int client_socket, int current_id)
 {
@@ -68,6 +66,7 @@ int create_topics(int client_socket, int current_id)
 	2) Continue without subscribing\n",
 	char_op[ANSSIZE];
 
+	/* Same as always, ask the client for the topic name and add the fields in the struct with the ping() function, defined in utils.c */
 	strcpy(topic[id_counter[TOPICCOUNTER]].name, ping(client_socket, "### TOPIC CREATION MENU ###\nInsert the topic name: ", AUTHLEN));
 	strcpy(topic[id_counter[TOPICCOUNTER]].creator, user[current_id].username);
 	topic[id_counter[TOPICCOUNTER]].topicid=id_counter[TOPICCOUNTER];
@@ -77,65 +76,54 @@ int create_topics(int client_socket, int current_id)
 	topic[id_counter[TOPICCOUNTER]].name[namelen-1]=0;
 
 	for(int j=0; j<MAXSUBS; j++)
-		if(user[current_id].topics_sub[j] == 0)
+		if(user[current_id].topics_sub[j] == 0)								/* If there is space for a new subscription */
 		{
-			user[current_id].topics_sub[j] = id_counter[TOPICCOUNTER];
+			user[current_id].topics_sub[j] = id_counter[TOPICCOUNTER];		/* add the ID of the topic in the subscription array */
 			break;
 		}
-		else if(user[current_id].topics_sub[j] > 0 && j == MAXSUBS-1)
+		else if(user[current_id].topics_sub[j] > 0 && j == MAXSUBS-1)		/* If MAXSUBS is reached */
 		{
-			strcpy(char_op, ping(client_socket, subscribe_menu, ANSSIZE));	
+			strcpy(char_op, ping(client_socket, subscribe_menu, ANSSIZE));	/* send the new MENU to choose if continue without subscribing or delete the subscription to another topic */
 			op=strtol(char_op, NULL, 0);
 
 			switch(op)
 			{
-				case 1:
+				case 1:														/* Remove the subscription to a topic and add the newly created */
 				{
-					if((pos=unsubscribe(client_socket, current_id)) >= 0)
+					if((pos=unsubscribe(client_socket, current_id)) >= 0)	/* Call the unsubscribe function used also in the normal flow of the program */
 					{
-						user[current_id].topics_sub[pos]=id_counter[TOPICCOUNTER];
+						user[current_id].topics_sub[pos]=id_counter[TOPICCOUNTER];	/* Add the ID of the new topic in the array */
 						break;
 					}
 					else
 						break;
 				}
-				case 2:
+				case 2:														/* Otherwise continue without subscribing */
 				{
 					break;
 				}
 			}
 		}
 
-	//if((fd=fopen(TOPICSDB, "a+")) < 0)
-	//	DieWithError("open() failed\n");
-	id_counter[TOPICCOUNTER]+=1;
+	id_counter[TOPICCOUNTER]+=1;											/* Increment the counter of the topics by 1 after the creation */
 	
 	ping(client_socket, "Topic created!\nPress ENTER to continue", ANSSIZE);
-
-	/* Write in the file the fields of the new topic */
-	//fprintf(fd, "%d %s %s %s\n", id_counter[TOPICCOUNTER], user[current_id].username, topic->name, topic->content); //asctime(tm) to print the current time
-	//id_counter[TOPICCOUNTER]+=1;
-	//fclose(fd);
 
 	return 0;
 }
 
-//
-//	RICORDA DI METTERE I SEMAFORI
-//	ANCHE PER LE NUOVE FUNZIONALITA'
-//
-
 /*
-	Function that lists the content of the file in which the topics are stored.
+	Function used to list all the existing topics.
+	This function also check if the user is subscribed to a topic or not, and depending on the result it
+		will print SUBSCRIBED or NOT SUBSCRIBED near the topic ID.
 */
 int list_topics(int client_socket, int current_id)
 {
 	char *res;
-	struct stat st;
-	int namelen, contentlen, size;
+	int size;
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
-		if(topic[j].topicid == 0 && j == id_counter[TOPICCOUNTER]-1)	/* Check if there are topics stored */
+		if(topic[j].topicid == 0 && j == id_counter[TOPICCOUNTER]-1)		/* Check if there are topics stored, if not, send the proper message */
 		{
 			ping(client_socket, "No topics to show!\nPress ENTER to continue", ANSSIZE);
 			return 0;
@@ -143,10 +131,10 @@ int list_topics(int client_socket, int current_id)
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 	{
-		if(topic[j].topicid > 0)	/* Check that the topics exists - if not, the id is = -1 */
+		if(topic[j].topicid > 0)											/* Check that the topics exists - if not, the id is = -1 or 0 */
 		{
 			for(int i=0; i<MAXSUBS; i++)
-				if(user[current_id].topics_sub[i] == topic[j].topicid)
+				if(user[current_id].topics_sub[i] == topic[j].topicid)		/* If the user is subscribed to this topic */
 				{
 					size=asprintf(&res, "ID: %d\tStatus: SUBSCRIBED\nCreator: %s\nTopic Name: %s\n\n", topic[j].topicid, topic[j].creator, topic[j].name);
 					break;
@@ -159,74 +147,81 @@ int list_topics(int client_socket, int current_id)
 			free(res);
 		}
 	}
+
 	ping(client_socket, "Press ENTER to continue", ANSSIZE);
-	// 136 bytes muore
-	//free(res);
 
 	return 0;
 }
 
 /*
-	The client choose the ID of a topic and then the server will delete it only if the client
-		is also the owner of the topic.
+	The client choose the ID of a topic and then the server will delete it.
+	This can happen only if the client executing this operation is also the owner of the topic.
 */
-int delete_topic(int client_socket, int current_id)
+int delete_topic(int client_socket, int current_id)			// NON MI LSTA PIU I TOPIC SE NE CANCELLO UNO
 {
-	char id_char[ANSSIZE],
-	res[] = "Topic deleted!\n";
+	char id_char[ANSSIZE];
 	int id;
 
+	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
+		printf("ID: %d\n", topic[j].topicid);
+
 	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to DELETE: ", ANSSIZE));
-	id=strtol(id_char, NULL, 0);
+	id=strtol(id_char, NULL, 0); 
 
-	if(strcmp(user[current_id].username, topic[id].creator) == 0)		/* If I am the owner of this topic */
-	{	
-		/*
-			Remove the subscription from the topic to everyone who have it and 
-			remove the messages from the unread list
-		*/
-		for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
-			for(int i=0; i<MAXSUBS; i++)
-				if(user[j].topics_sub[i] == id)
-					user[j].topics_sub[i] = 0;
+	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
+		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0)
+		{
+			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
+			return 0;
+		}
+		else if(topic[j].topicid == id)
+		{
+			if(strcmp(user[current_id].username, topic[id].creator) == 0)			/* If I am the owner of this topic */
+			{	
+				for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
+					for(int i=0; i<MAXSUBS; i++)
+						if(user[j].topics_sub[i] == id)								/* If the user has this topic in the subscription list, remove it */
+							user[j].topics_sub[i] = 0;
 
-		for(int j=0; j<id_counter[AUTHCOUNTER]; j++)
-			for(int i=0; i<MAXUNREAD; i++)
-				for(int y=0; y<id_counter[THREADCOUNTER]; y++)
-					for(int x=0; x<id_char[MSGCOUNTER]; x++)
-						if(thread[y].topicid == id && thread[y].threadid == message[x].threadid && user[j].unread_msg[i] == message[x].msgid)
-							user[j].unread_msg[i] = 0;
+				for(int j=0; j<id_counter[AUTHCOUNTER]; j++)						/* For each user */
+					for(int i=0; i<MAXUNREAD; i++)									/* for each MAXUNRED */
+						for(int y=0; y<id_counter[THREADCOUNTER]; y++)				/* for each thread */
+							for(int x=0; x<id_char[MSGCOUNTER]; x++)				/* and for each message */
+								if(thread[y].topicid == id && thread[y].threadid == message[x].threadid && user[j].unread_msg[i] == message[x].msgid)
+									user[j].unread_msg[i] = 0;						/* Remove it from the array of unread messages */
 
-		for(int j=0; j<id_counter[THREADCOUNTER]; j++)
-			if(thread[j].topicid == id)
-			{
-				for(int i=0; i<id_counter[MSGCOUNTER]; i++)
-					if(thread[j].threadid == message[i].threadid)
+				for(int j=0; j<id_counter[THREADCOUNTER]; j++)
+					if(thread[j].topicid == id)										/* If the thread belongs to the topic */
 					{
-						memset(message[i].creator, 0, sizeof(message[i].creator));
-						memset(message[i].content, 0, sizeof(message[i].content));
-						message[i].threadid=-1;
+						for(int i=0; i<id_counter[MSGCOUNTER]; i++)
+							if(thread[j].threadid == message[i].threadid)			/* If the message belongs to the thread */
+							{
+								memset(message[i].creator, 0, sizeof(message[i].creator));	/* Remove all the messages */
+								memset(message[i].content, 0, sizeof(message[i].content));
+								message[i].threadid=0;
+							}
+
+						memset(thread[j].name, 0, sizeof(thread[j].name));					/* Then remove the thread */
+						memset(thread[j].creator, 0, sizeof(thread[j].creator));
+						memset(thread[j].content, 0, sizeof(thread[j].content));
+						thread[j].topicid=0;
+						thread[j].threadid=0;
 					}
 
-				memset(thread[j].name, 0, sizeof(thread[j].name));
-				memset(thread[j].creator, 0, sizeof(thread[j].creator));
-				memset(thread[j].content, 0, sizeof(thread[j].content));
-				thread[j].topicid=-1;
-				thread[j].threadid=-1;
+				memset(topic[id].creator, 0, sizeof(topic[id].creator));					/* Finally, remove the topic */
+				memset(topic[id].name, 0, sizeof(topic[id].name));
+				topic[id].topicid=0;
+
+				ping(client_socket, "Topic deleted!\nPress ENTER to continue", ANSSIZE);
+
+				return 0;
 			}
-
-		memset(topic[id].creator, 0, sizeof(topic[id].creator));
-		memset(topic[id].name, 0, sizeof(topic[id].name));
-		topic[id].topicid=-1;
-
-		ping(client_socket, "Topic deleted!\nPress ENTER to continue", ANSSIZE);
-	}
-	else if(id >= id_counter[TOPICCOUNTER] || id <= 0)
-		ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
-	else    /* Tell the client that he is not the owner of the topics he's trying to delete */
-		ping(client_socket, "You're not the owner of this topic!\nPress ENTER to continue", ANSSIZE);
-	
-	//TOGLIERE L'ISCRIZIONE AGLI USERS ISCRITTI AD UN TOPIC CANCELLATO
+			else    /* Tell the client that he is not the owner of the topics he's trying to delete */
+			{
+				ping(client_socket, "You're not the owner of this topic!\nPress ENTER to continue", ANSSIZE);
+				return 0;
+			}
+		}
 
 	return 0;
 }
@@ -245,7 +240,7 @@ int subscribe(int client_socket, int current_id) 	// SE MI ISCRIVO RICEVO IN UNR
 
 	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to SUBSCRIBE: ", ANSSIZE));
 	id=strtol(id_char, NULL, 0);
-	printf("id %d\n", id);
+
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)	/* Check that the ID of the topic exists */
 		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <=0)
 		{

@@ -1,9 +1,17 @@
 #include "whiteboard.h"
 
+/* 
+	Function that allocates and attaches a SYSV shared memory segmet for 
+		id_count[4] - array used as counter for 4 different things
+		user's struct
+		topic's struct
+		thread's struct
+		message's struct
+	Called in server.c
+*/
 int init_shm(int perms)
 {
-	/* Shared memory for both structures and an id counter for the clients */
-	if((shmid_counter=shmget(SHMKEY_C, COUNTSIZE, perms)) < 0)	/* Size di un array da 3 = 12 - mettere a posto */
+	if((shmid_counter=shmget(SHMKEY_C, COUNTSIZE, perms)) < 0)
 		DieWithError("shmget()#1 failed\n");
 	if((shmid_auth=shmget(SHMKEY_A, SHMSIZE, perms)) < 0)
 		DieWithError("shmget()#2 failed\n");
@@ -13,11 +21,6 @@ int init_shm(int perms)
 		DieWithError("shmget()#4 failed\n");
 	if((shmid_msg=shmget(SHMKEY_M, SHMSIZE, perms)) < 0)
 		DieWithError("shmget()#5 failed\n");
-
-	// Definire numero massimo di topics (?)
-	// La struct che controlla il tutto deve essere messa in shared memory
-	// Quindi la variabile che punta alla struct dovra' avere come valore 
-	// il valore di ritorno di shmat
 
 	if((id_counter=shmat(shmid_counter, NULL, 0)) < 0)
 		DieWithError("shmat()#1 failed\n");
@@ -33,9 +36,15 @@ int init_shm(int perms)
 	return 0;
 }
 
+/*
+	Function used to detach the shared memory segment allocated
+	and mark the segment to be destroyed with IPC_RMID.
+	Called in utils.c
+*/
+
 int remove_shm()
 {
-	if(shmdt(id_counter) < 0) 
+	if(shmdt(id_counter) < 0)
 		DieWithError("shmdt() failed\n");
 	if(shmdt(user) < 0) 
 		DieWithError("shmdt() failed\n");

@@ -74,7 +74,7 @@ void communication()
 	if((strcmp(response, "Login Failed!") == 0) || (strcmp(response, "Exiting the program\nBYE!") == 0))
 	{
 		close(sfd);
-		exit(0);
+		exit(1);
 	}
 
 	fgets(input, BUFFSIZE, stdin);

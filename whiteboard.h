@@ -64,7 +64,7 @@ int shmid_msg;
 
 /* Stuff for semaphores creation/management - whiteboard_sem.c */
 #define SEMPERM 0600
-#define SEMKEY 0x11111
+#define SEMKEY 0x66666
 #define SEMAUTH 0
 #define SEMTOPICS 1
 #define NUMSEM 3	// METTERE A POSTO
