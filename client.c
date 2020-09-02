@@ -1,10 +1,10 @@
-#include <stdio.h>      /* for printf() and fprintf() */
-#include <sys/socket.h> /* for socket(), connect(), send(), and recv() */
-#include <arpa/inet.h>  /* for sockaddr_in and inet_addr() */
-#include <stdlib.h>     /* for atoi() and exit() */
-#include <string.h>     /* for memset() */
-#include <unistd.h>     /* for close() */
-#include <sys/types.h>	/* for waitpid() */
+#include <stdio.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 #define DOMAIN AF_INET
 #define TYPE SOCK_STREAM
@@ -42,26 +42,32 @@ int main(int argc, char *argv[])
 	if((connect(sfd, (struct sockaddr *)&saddr, sizeof(saddr))) < 0)
 		DieWithError("connect() failed\n");
 
-	for(;;)
+	for(;;)										/* Infinite loop which keep calling the same function */
 	{
-		communication();
+		communication();						/* Used to receive and then send something to the client */
 	}
 
-	close(sfd); /* Close the connection and destroy the socket */
+	close(sfd); 								/* Close the connection and destroy the socket */
 	exit(0);
 }
 
+/* 
+	Print an error message and exits.
+*/
 void DieWithError(char *message)
 {
 	perror(message);
 	exit(1);
 }
 
-/* Function used to send and receive messages from the server */
+/*
+	Function used to receive and then send something to the server.
+	I also check if the answer provided by the server makes it exit.
+*/
 void communication()
 {
 	int bytereceived=0;
-	char response[1000], input[BUFFSIZE];		/* IMPORTANTE -> CAMBIA SIZE */
+	char response[1000], input[BUFFSIZE];
 
 	memset(response, 0, sizeof(response));
 	if((bytereceived=recv(sfd, response, sizeof(response)-1, 0)) <= 0)

@@ -1,49 +1,52 @@
 #include "whiteboard.h"
 
 /*
-	Load all the topics stored in the backup file in an array of structs for the topics.
+	Load all the existing threads, from the file in which are stored.
+	(threads.txt) File format: THREAD_ID TOPIC_ID Creator Name Content
 */
 void load_threads()
 {
 	FILE *fd;
-	struct stat st;
-	char tmp1[ANSSIZE], tmp2[ANSSIZE], username[AUTHLEN], name[AUTHLEN], content[CONTENTLEN];
-	int size;
+	char tmp1[ANSSIZE], 																/* Buffer used to store the ID of the thread taken from file*/
+	tmp2[ANSSIZE], 																		/* Buffer used to store the ID of the topic taken from file */
+	username[AUTHLEN], 																	/* Buffer used to store the username of the creator of the thread */
+	name[AUTHLEN], 																		/* Buffer used to store the name of the thread */
+	content[CONTENTLEN];																/* Buffer used to store the content of the thread */
 
 	if((fd=fopen(THREADDB, "r")) < 0)
-		DieWithError("open() in load_threads() failed\n");
-	
-	if(stat(THREADDB, &st) == 0)	/* Get the total length of the file */
-		size=st.st_size;
+		DieWithError("open() in load_threads() failed\n");								/* Open the file in READ mode */
 
-	/* Read the file of the topics saved and load them in an array of struct for the topics */
-	while((fscanf(fd, "%s %s %s %s %[^\n]", tmp1, tmp2, username, name, content)) > 0)
+	while((fscanf(fd, "%s %s %s %s %[^\n]", tmp1, tmp2, username, name, content)) > 0)	/* Read the file and store the content */
 	{
-		id_counter[THREADCOUNTER] = strtol(tmp1, NULL, 0);
-		thread[id_counter[THREADCOUNTER]].threadid=id_counter[THREADCOUNTER];
-		thread[id_counter[THREADCOUNTER]].topicid = strtol(tmp2, NULL, 0);
-		strcpy(thread[id_counter[THREADCOUNTER]].creator, username);
-		strcpy(thread[id_counter[THREADCOUNTER]].name, name);
-		strcpy(thread[id_counter[THREADCOUNTER]].content, content);
+		id_counter[THREADCOUNTER] = strtol(tmp1, NULL, 0);								/* Set the counter for the treahds as the ID of the current thread */
+		thread[id_counter[THREADCOUNTER]].threadid=id_counter[THREADCOUNTER];			/* And set the ID of this thread as the value of the counter */
+		thread[id_counter[THREADCOUNTER]].topicid = strtol(tmp2, NULL, 0);				/* Get the ID of the topic */
+		strcpy(thread[id_counter[THREADCOUNTER]].creator, username);					/* The owner of the thread */
+		strcpy(thread[id_counter[THREADCOUNTER]].name, name);							/* Its name */
+		strcpy(thread[id_counter[THREADCOUNTER]].content, content);						/* And the content */
 	}
 
-	id_counter[THREADCOUNTER]+=1;
+	id_counter[THREADCOUNTER]+=1;														/* At the end, increment by 1 the counter */
 
 	fclose(fd);
 
 	return ;
 }
 
+/*
+	Function used to write in a file the content of the structs of threads.
+	This will be called when the server exits.
+*/
 void write_threads()
 {
 	FILE *fd;
 	
-	if((fd=fopen(THREADDB, "w")) < 0)		/* Open the file and overwrite the content with the new one */
+	if((fd=fopen(THREADDB, "w")) < 0)													/* Open the file in WRITE mode to overwrite the content of it */
 		DieWithError("open() in write_threads() failed\n");
 	
 	for(int j=0; j<id_counter[THREADCOUNTER]; j++)
 	{
-		if(thread[j].threadid > 0)	/* Check that the topics exists - if not, the id is = -1 */
+		if(thread[j].threadid > 0)														/* Check that the topics exists - if not, the id is = 0 */
 			fprintf(fd, "%d %d %s %s %s\n", thread[j].threadid, thread[j].topicid, thread[j].creator, thread[j].name, thread[j].content); 
 	}
 
@@ -51,9 +54,10 @@ void write_threads()
 
 	return ;
 }
+
 /*
 	Function used to append a new message(thread content) to a new thread under a specific topic.
-		Ask for the topic ID, write the name and the content of this thread.
+		Ask for the topic ID on which the client wants to append this thread, then the name and the content of it.
 */
 void append(int client_socket, int current_id)
 {
@@ -61,25 +65,25 @@ void append(int client_socket, int current_id)
 	int id, namelen, contentlen;
 
 	strcpy(id_char, ping(client_socket, "Choose the ID of the topic in which you want to append the thread: ", ANSSIZE));
-	id=strtol(id_char, NULL, 0);					/* Convert it in an int type */
+	id=strtol(id_char, NULL, 0);					
 
 	for(int j=0; j<MAXSUBS; j++)
-		if(user[current_id].topics_sub[j] == id) 	/* If I'm not suibscribed to this topic I can't append a new thread to it */
+		if(user[current_id].topics_sub[j] == id) 										/* Check if the current user is subscribed to the chosen topic */
 			break;	
-		else if(user[current_id].topics_sub[j] != id && j == MAXSUBS-1)
+		else if(user[current_id].topics_sub[j] != id && j == MAXSUBS-1)					/* If not, can't append a new thread */
 		{
 			ping(client_socket, "You are not subscribed to this topic!\nPress ENTER to continue", ANSSIZE);
 			return ;
 		}
 
-	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)	/* Check that the ID of the topic exists */
+	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)										/* Check that the ID of the topic exists */
 	{
 		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0)
 		{
 			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return ;
 		}
-		else if(topic[j].topicid == id)
+		else if(topic[j].topicid == id)													/* If yes, add the new thread */
 		{
 			thread[id_counter[THREADCOUNTER]].threadid=id_counter[THREADCOUNTER]; 
 			thread[id_counter[THREADCOUNTER]].topicid=id;
@@ -93,7 +97,7 @@ void append(int client_socket, int current_id)
 			contentlen=strlen(thread[id_counter[THREADCOUNTER]].content);
 			thread[id_counter[THREADCOUNTER]].content[contentlen-1]=0;
 
-			id_counter[THREADCOUNTER]+=1;
+			id_counter[THREADCOUNTER]+=1;												/* Increment the counter of the threads by 1 */
 
 			ping(client_socket, "Thread created!\nPress ENTER to continue", ANSSIZE);
 

@@ -1,11 +1,18 @@
 #include "whiteboard.h"
 
+/* 
+	Print an error message and exits.
+*/
 void DieWithError(char *message)
 {
 	perror(message);
 	exit(1);
 }
 
+/*
+	When the interrupt signal occurs, write down in the files all the things stored in the struct,
+		remove the shared memory segment and the semaphores, close the sockets and exit.
+*/
 void sigint(int signal)
 {
 	write_utils();
@@ -23,7 +30,7 @@ void sigint(int signal)
 
 /* Function used to send a message back to the client through the socket 
 	and get back the response by it.
-	Server: ping
+	Server: ping to client
 	Client: pong back
 */
 char *ping(int client_socket, char *message, int reponse_len)
@@ -33,7 +40,6 @@ char *ping(int client_socket, char *message, int reponse_len)
 
 	msg_len = strlen(message);
 	memset(buff, 0, sizeof(buff));
-	//printf("[3] I'm pong() with message = %s\n", message); // MESSAGGIO DI CONTROLLO - ELIMINARE
 
 	if((send(client_socket, message, msg_len, 0)) != msg_len)
 		DieWithError("send() failed\n");
@@ -41,26 +47,25 @@ char *ping(int client_socket, char *message, int reponse_len)
 	if((bytesreceived=recv(client_socket, buff, sizeof(buff), 0)) < 0)
 		DieWithError("recv() failed\n");
 	
-	buff[bytesreceived]='\0'; // FORSE E' -1
+	buff[bytesreceived]='\0';
 
-	if(strlen(buff) > reponse_len || bytesreceived <= 0)		/* +1 because there is the \n at the end */
+	if(strlen(buff) > reponse_len || bytesreceived <= 0)				/* If the asnwer provided is longer than the expected one, or I receive nothing(used for ctrl+c), the client exits */ 
 	{
 		current_id=getcurrentid();
 		user[current_id].logged=0;
-		v(SEMAUTH);
-		v(SEMTOPICS);
+		v(SEMAUTH);														/* Call the v-operation for both sempahores */
+		v(SEMTOPICS);													/* NOTE: this may cause not blocking operations for each time the v-operation was called if multiple clients crash togheter */
 		send(client_socket, error, sizeof(error), 0);
 		DieWithError("Max length exceeded or connection close on client side\n");
 	}
-
-	//printf("Received: %s", buff);		// MESSAGGIO DI CONTROLLO - ELIMINARE
 	
 	return buff;
 }
 
 /* 
 	Function that returns the ID of the client on which I want to do an operation.
-		This is possible by checking the PID of the process that invokes this function.
+	This is possible by checking the PID of the process that invokes this function 
+		and comparing it to the PID stored in the struct of users.
 */
 int getcurrentid()
 {

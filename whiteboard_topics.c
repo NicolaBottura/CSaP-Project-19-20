@@ -1,7 +1,7 @@
 #include "whiteboard.h"
 
 /*
-	Load all the topics created from the file in which are stored.
+	Load all the existing topics, from the file in which are stored.
 	(topics.txt) File format: ID Creator Content
 */
 void load_topics()
@@ -37,12 +37,12 @@ void write_topics()
 {
 	FILE *fd;
 	
-	if((fd=fopen(TOPICSDB, "w")) < 0)										/* Open the file and overwrite the content with the new one */
+	if((fd=fopen(TOPICSDB, "w")) < 0)										/* Open the file in WRITE mode to overwrite the content of it */
 		DieWithError("open() in write_topics() failed\n");
 	
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 	{
-		if(topic[j].topicid > 0)											/* Check that the topics exists - if not, the id is = -1 or 0 */
+		if(topic[j].topicid > 0)											/* Check that the topics exists - if not, the id is = 0 */
 			fprintf(fd, "%d %s %s\n", topic[j].topicid, topic[j].creator, topic[j].name); 
 	}
 
@@ -131,7 +131,7 @@ void list_topics(int client_socket, int current_id)
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 	{
-		if(topic[j].topicid > 0)											/* Check that the topics exists - if not, the id is = -1 or 0 */
+		if(topic[j].topicid > 0)											/* Check that the topics exists - if not, the id is = 0 */
 		{
 			for(int i=0; i<MAXSUBS; i++)
 				if(user[current_id].topics_sub[i] == topic[j].topicid)		/* If the user is subscribed to this topic */
