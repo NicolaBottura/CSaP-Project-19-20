@@ -64,31 +64,34 @@ void append(int client_socket, int current_id)
 	char id_char[ANSSIZE];
 	int id, namelen, contentlen;
 
-	strcpy(id_char, ping(client_socket, "Choose the ID of the topic in which you want to append the thread: ", ANSSIZE));
+	strcpy(id_char, ping(client_socket, "\nChoose the ID of the topic in which you want to append the thread: ", ANSSIZE));
 	id=strtol(id_char, NULL, 0);					
+
+	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)										/* Check that the ID of the topic exists */
+		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0 || topic[id].topicid <= 0)
+		{
+			ping(client_socket, "\nThis topic does not exist!\nPress ENTER to continue!", ANSSIZE);
+			return ;
+		}
+		else break;
 
 	for(int j=0; j<MAXSUBS; j++)
 		if(user[current_id].topics_sub[j] == id) 										/* Check if the current user is subscribed to the chosen topic */
 			break;	
 		else if(user[current_id].topics_sub[j] != id && j == MAXSUBS-1)					/* If not, can't append a new thread */
 		{
-			ping(client_socket, "You are not subscribed to this topic!\nPress ENTER to continue", ANSSIZE);
+			ping(client_socket, "\nYou are not subscribed to this topic!\nPress ENTER to continue", ANSSIZE);
 			return ;
 		}
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)										/* Check that the ID of the topic exists */
 	{
-		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0)
-		{
-			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
-			return ;
-		}
-		else if(topic[j].topicid == id)													/* If yes, add the new thread */
+		if(topic[j].topicid == id)														/* If yes, add the new thread */
 		{
 			thread[id_counter[THREADCOUNTER]].threadid=id_counter[THREADCOUNTER]; 
 			thread[id_counter[THREADCOUNTER]].topicid=id;
 			strcpy(thread[id_counter[THREADCOUNTER]].creator, user[current_id].username);
-			strcpy(thread[id_counter[THREADCOUNTER]].name, ping(client_socket, "Insert the name of this thread: ", AUTHLEN));
+			strcpy(thread[id_counter[THREADCOUNTER]].name, ping(client_socket, "\nInsert the name of this thread: ", AUTHLEN));
 			strcpy(thread[id_counter[THREADCOUNTER]].content, ping(client_socket, "Insert the content of this thread: ", CONTENTLEN));
 	
 			/*Remove the '\n' from the user's input fields */
@@ -99,7 +102,7 @@ void append(int client_socket, int current_id)
 
 			id_counter[THREADCOUNTER]+=1;												/* Increment the counter of the threads by 1 */
 
-			ping(client_socket, "Thread created!\nPress ENTER to continue", ANSSIZE);
+			ping(client_socket, "\nThread created!\nPress ENTER to continue", ANSSIZE);
 
 			return ;
 		}

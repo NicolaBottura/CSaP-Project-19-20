@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+#include <termios.h>
+
 #define DOMAIN AF_INET
 #define TYPE SOCK_STREAM
 #define PROTOCOL IPPROTO_TCP

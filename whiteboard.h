@@ -21,7 +21,7 @@ char buff[BUFFSIZE];
 
 /* -- General stuff -- */
 #define ANSSIZE 3							/* Used when expecting a number or the \n as answer to a ping() */
-#define MENU "****** WHITEBOARD MENU ******\n \
+#define MENU "\n****** WHITEBOARD MENU ******\n\n \
 1) Create a new topic\n \
 2) List topics\n \
 3) Delete a topic\n \
@@ -31,8 +31,8 @@ char buff[BUFFSIZE];
 7) Subscribe to a topic\n \
 8) Show unread messages\n \
 9) Unsubscribe a topic\n \
-10) Quit\n\n \
-CHOOSE A NEW OPERATION: "
+10) Quit\n \
+choose an operation: "
 /* Both used only in server.c */
 int server_socket, 							/* Server Socket FD */
 client_socket;								/* Client Socket FD */

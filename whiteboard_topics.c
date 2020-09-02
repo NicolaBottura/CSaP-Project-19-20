@@ -67,7 +67,7 @@ void create_topics(int client_socket, int current_id)
 	char_op[ANSSIZE];
 
 	/* Same as always, ask the client for the topic name and add the fields in the struct with the ping() function, defined in utils.c */
-	strcpy(topic[id_counter[TOPICCOUNTER]].name, ping(client_socket, "### TOPIC CREATION MENU ###\nInsert the topic name: ", AUTHLEN));
+	strcpy(topic[id_counter[TOPICCOUNTER]].name, ping(client_socket, "\nInsert the topic name: ", AUTHLEN));
 	strcpy(topic[id_counter[TOPICCOUNTER]].creator, user[current_id].username);
 	topic[id_counter[TOPICCOUNTER]].topicid=id_counter[TOPICCOUNTER];
 	
@@ -107,7 +107,7 @@ void create_topics(int client_socket, int current_id)
 
 	id_counter[TOPICCOUNTER]+=1;											/* Increment the counter of the topics by 1 after the creation */
 	
-	ping(client_socket, "Topic created!\nPress ENTER to continue", ANSSIZE);
+	ping(client_socket, "\nTopic created!\nPress ENTER to continue", ANSSIZE);
 
 	return ;
 }
@@ -125,30 +125,26 @@ void list_topics(int client_socket, int current_id)
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 		if(topic[j].topicid == 0 && j == id_counter[TOPICCOUNTER]-1)		/* Check if there are topics stored, if not, send the proper message */
 		{
-			ping(client_socket, "No topics to show!\nPress ENTER to continue", ANSSIZE);
+			ping(client_socket, "\nNo topics to show!\nPress ENTER to continue", ANSSIZE);
 			return ;
 		}
-
-	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
-	{
-		if(topic[j].topicid > 0)											/* Check that the topics exists - if not, the id is = 0 */
+		else if(topic[j].topicid > 0)										/* Check that the topics exists - if not, the id is = 0 */
 		{
 			for(int i=0; i<MAXSUBS; i++)
 				if(user[current_id].topics_sub[i] == topic[j].topicid)		/* If the user is subscribed to this topic */
 				{
-					size=asprintf(&res, "ID: %d\tStatus: SUBSCRIBED\nCreator: %s\nTopic Name: %s\n\n", topic[j].topicid, topic[j].creator, topic[j].name);
+					size=asprintf(&res, "\nID: %d\tStatus: SUBSCRIBED\nCreator: %s\nTopic Name: %s\n", topic[j].topicid, topic[j].creator, topic[j].name);
 					break;
 				}
 				else if(user[current_id].topics_sub[i] != topic[j].topicid && i == MAXSUBS-1)
-					size=asprintf(&res, "ID: %d\tStatus: NOT SUBSCRIBED\nCreator: %s\nTopic Name: %s\n\n", topic[j].topicid, topic[j].creator, topic[j].name);
+					size=asprintf(&res, "\nID: %d\tStatus: NOT SUBSCRIBED\nCreator: %s\nTopic Name: %s\n", topic[j].topicid, topic[j].creator, topic[j].name);
 
 			send(client_socket, res, size, 0);
 			//ping(client_socket, res, ANSSIZE);
 			free(res);
 		}
-	}
 
-	ping(client_socket, "Press ENTER to continue", ANSSIZE);
+	ping(client_socket, "\nPress ENTER to continue", ANSSIZE);
 
 	return ;
 }
@@ -162,13 +158,13 @@ void delete_topic(int client_socket, int current_id)
 	char id_char[ANSSIZE];
 	int id;
 
-	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to DELETE: ", ANSSIZE));
+	strcpy(id_char, ping(client_socket, "\nChoose the topic ID you want to DELETE: ", ANSSIZE));
 	id=strtol(id_char, NULL, 0); 
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0) /* Check if the topic chosen exists */
 		{
-			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
+			ping(client_socket, "\nThis topic does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return ;
 		}
 		else if(topic[j].topicid == id)
@@ -211,13 +207,13 @@ void delete_topic(int client_socket, int current_id)
 				memset(topic[id].name, 0, sizeof(topic[id].name));
 				topic[id].topicid=0;
 
-				ping(client_socket, "Topic deleted!\nPress ENTER to continue", ANSSIZE);
+				ping(client_socket, "\nTopic deleted!\nPress ENTER to continue", ANSSIZE);
 
 				return ;
 			}
 			else    														/* Tell the client that he is not the owner of the topics he's trying to delete */
 			{
-				ping(client_socket, "You're not the owner of this topic!\nPress ENTER to continue", ANSSIZE);
+				ping(client_socket, "\nYou're not the owner of this topic!\nPress ENTER to continue", ANSSIZE);
 				return ;
 			}
 		}
@@ -237,13 +233,13 @@ void subscribe(int client_socket, int current_id)
 	char id_char[ANSSIZE];
 	int id;
 
-	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to SUBSCRIBE: ", ANSSIZE));
+	strcpy(id_char, ping(client_socket, "\nChoose the topic ID you want to SUBSCRIBE: ", ANSSIZE));
 	id=strtol(id_char, NULL, 0);
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)							/* Check that the chosen topic exists */
 		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <=0)
 		{
-			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
+			ping(client_socket, "\nThis topic does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return ;
 		}
 		else if(topic[j].topicid == id)										/* If yes */
@@ -251,7 +247,7 @@ void subscribe(int client_socket, int current_id)
 			for(int j=0; j<MAXSUBS; j++)
 				if(user[current_id].topics_sub[j] == id)					/* Check if I'm not already subscribed to it */
 				{
-					ping(client_socket, "You are already subscribed to this topic!\nPress ENTER to continue!", ANSSIZE);
+					ping(client_socket, "\nYou are already subscribed to this topic!\nPress ENTER to continue!", ANSSIZE);
 					return ;
 				}
 
@@ -259,12 +255,12 @@ void subscribe(int client_socket, int current_id)
 				if(user[current_id].topics_sub[j] == 0)						/* At the first occurrence equal to 0 add the new topic */
 				{
 					user[current_id].topics_sub[j] = id;
-					ping(client_socket, "Subscription completed!\nPress ENTER to continue", ANSSIZE);
+					ping(client_socket, "\nSubscription completed!\nPress ENTER to continue", ANSSIZE);
 					return ;
 				}
 				else if(user[current_id].topics_sub[j] > 0 && j == MAXSUBS-1)	/* Otherwise, if all the array is scanned and there are no spaces available, exit */
 				{	
-					ping(client_socket, "You have reached the limit of subscriptions!\nPress ENTER to continue!", ANSSIZE);
+					ping(client_socket, "\nYou have reached the limit of subscriptions!\nPress ENTER to continue!", ANSSIZE);
 					return ;
 				}
 		}
@@ -280,13 +276,13 @@ int unsubscribe(int client_socket, int current_id)
 	char id_char[ANSSIZE];
 	int id;
 
-	strcpy(id_char, ping(client_socket, "Choose the topic ID you want to UNSUBSCRIBE: ", ANSSIZE));
+	strcpy(id_char, ping(client_socket, "\nChoose the topic ID you want to UNSUBSCRIBE: ", ANSSIZE));
 	id=strtol(id_char, NULL, 0);
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)							/* Check that the chosen topic exists */
 		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0)
 		{
-			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
+			ping(client_socket, "\nThis topic does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return -1;
 		}
 		else if(topic[j].topicid == id)										/* If yes */
@@ -295,12 +291,12 @@ int unsubscribe(int client_socket, int current_id)
 				if(user[current_id].topics_sub[j] == id)					/* and if I am also subscribed to it */
 				{
 					user[current_id].topics_sub[j]=0;						/* remove it from subscribed topics */
-					ping(client_socket, "Successfully unsubscribed\nPress ENTER to continue!", ANSSIZE);
+					ping(client_socket, "\nSuccessfully unsubscribed\nPress ENTER to continue!", ANSSIZE);
 					return j;
 				}
 				else if(user[current_id].topics_sub[j] != id && j == MAXSUBS-1)
 				{
-					ping(client_socket, "You are not subscribed at this topic\nPress ENTER to continue!", ANSSIZE);
+					ping(client_socket, "\nYou are not subscribed at this topic\nPress ENTER to continue!", ANSSIZE);
 					return -1;
 				}
 		}

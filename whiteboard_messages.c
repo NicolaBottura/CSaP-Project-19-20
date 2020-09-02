@@ -61,7 +61,7 @@ void reply(int client_socket, int current_id)
 	char id_char[ANSSIZE];
 	int id, contentlen;
 
-	strcpy(id_char, ping(client_socket, "Choose the thread ID on which you want to REPLY: ", ANSSIZE));		/* Ask the ID of the thread */
+	strcpy(id_char, ping(client_socket, "\nChoose the thread ID on which you want to REPLY: ", ANSSIZE));	/* Ask the ID of the thread */
 	id=strtol(id_char, NULL, 0);																			/* Convert it in an int type */
 
 	for(int j=0; j<MAXSUBS; j++)
@@ -69,15 +69,15 @@ void reply(int client_socket, int current_id)
 			break;
 		else if(user[current_id].topics_sub[j] != id && j == MAXSUBS-1)										/* If not, can't add a new message */
 		{
-			ping(client_socket, "You are not subscribed to the topic of this thread!\nPress ENTER to continue", ANSSIZE);
+			ping(client_socket, "\nYou are not subscribed to the topic of this thread!\nPress ENTER to continue", ANSSIZE);
 			return ;
 		}
 
 	for(int j=0; j<id_counter[THREADCOUNTER]; j++)															/* Check that the ID of the thread exists */
 	{
-		if(id >= id_counter[THREADCOUNTER] || (thread[j].threadid != id && j==id_counter[THREADCOUNTER]-1) || id <= 0)
+		if(id >= id_counter[THREADCOUNTER] || (thread[j].threadid != id && j==id_counter[THREADCOUNTER]-1) || id <= 0 || thread[id].threadid <= 0)
 		{
-			ping(client_socket, "This thread does not exist!\nPress ENTER to continue!", ANSSIZE);
+			ping(client_socket, "\nThis thread does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return ;
 		}
 		else if(thread[j].threadid == id)																	/* If yes, add the new message */
@@ -85,7 +85,7 @@ void reply(int client_socket, int current_id)
 			message[id_counter[MSGCOUNTER]].msgid = id_counter[MSGCOUNTER];
 			message[id_counter[MSGCOUNTER]].threadid = id;
 			strcpy(message[id_counter[MSGCOUNTER]].creator, user[current_id].username);
-			strcpy(message[id_counter[MSGCOUNTER]].content, ping(client_socket, "Insert the content of the message: ", CONTENTLEN));
+			strcpy(message[id_counter[MSGCOUNTER]].content, ping(client_socket, "\nInsert the content of the message: ", CONTENTLEN));
 	
 			/*Remove the '\n' from the user's input fields */
 			contentlen=strlen(message[id_counter[MSGCOUNTER]].content);
@@ -104,7 +104,7 @@ void reply(int client_socket, int current_id)
 
 			id_counter[MSGCOUNTER]+=1;																		/* At the end, increment the counter by 1 */
 
-			ping(client_socket, "Message added!\nPress ENTER to continue", ANSSIZE);
+			ping(client_socket, "\nMessage added!\nPress ENTER to continue", ANSSIZE);
 
 			return ;
 		}
@@ -126,10 +126,11 @@ void show_unread(int client_socket, int current_id)
 {
 	int counter=0, size1, size2, operation, pos, id;
 	char *tmp1, *tmp2, op[ANSSIZE], id_char[ANSSIZE];
-	char status_menu [] = "Choose if you want to display:\n \
+	char status_menu [] = "\nUnread messages menu\n \
 	1) All the messages unread\n \
 	2) A specific message\n \
-	0) Exit\n";
+	0) Exit\n \
+	choose an operation: ";
 
 	for(int j=0; j<MAXUNREAD; j++)																			/* Check how many unread messages has the current user */
 		if(user[current_id].unread_msg[j] > 0)
@@ -174,11 +175,16 @@ void show_unread(int client_socket, int current_id)
 			}
 			case 2: 																						/* Choose the ID of the message you want to read and display it */
 			{
-				strcpy(id_char, ping(client_socket, "Choose the ID of the message you want to display: ", ANSSIZE));
+				strcpy(id_char, ping(client_socket, "\nChoose the ID of the message you want to display: ", ANSSIZE));
 				id=strtol(id_char, NULL, 0);
 
 				for(int j=0; j<id_counter[MSGCOUNTER]; j++)
-					if(message[j].msgid == id)																/* If the chosen message exists */
+					if(message[j].msgid != id && j == id_counter[MSGCOUNTER]-1 || id <= 0)					/* If the message does not exist, send the proper message */
+					{
+						ping(client_socket, "\nThis message does not exist!\nPress ENTER to continue!", ANSSIZE);
+						return;
+					}
+					else if(message[j].msgid == id)															/* If the chosen message exists */
 					{
 						for(int j=0; j<MAXUNREAD; j++)
 							if(id == user[current_id].unread_msg[j])										/* Check again that the user has this message in the unread array */
@@ -191,18 +197,13 @@ void show_unread(int client_socket, int current_id)
 								free(tmp2);
 								return;							
 							}
-					}
-					else if(message[j].msgid != id && j == id_counter[MSGCOUNTER]-1)						/* If the message does not exist, send the proper message */
-					{
-						ping(client_socket, "This message does not exist!\nPress ENTER to continue!", ANSSIZE);
-						return;
-					}
+					}		
 			}
 			case 0:
 				break;
 			default:
 			{	
-				ping(client_socket, "Invalid operation, exiting from here!\nPress ENTER to continue!", ANSSIZE);
+				ping(client_socket, "\nInvalid operation, exiting from here!\nPress ENTER to continue!", ANSSIZE);
 				break;
 			}
 		}
@@ -225,20 +226,13 @@ void display_topic_content(int client_socket, int current_id)
 	int namelen, contentlen, size1, id, size2;
 	char id_char[ANSSIZE];
 
-	strcpy(id_char, ping(client_socket, "Choose the ID of the TOPIC you want to see: ", ANSSIZE));			/* Ask the ID of the thread */
+	strcpy(id_char, ping(client_socket, "\nChoose the ID of the TOPIC you want to see: ", ANSSIZE));		/* Ask the ID of the thread */
 	id=strtol(id_char, NULL, 0);
-
-	for(int j=0; j<id_counter[THREADCOUNTER]; j++)
-		if(thread[j].threadid == 0 && j == id_counter[THREADCOUNTER]-1)	/* Check if there are topics stored */
-		{
-			ping(client_socket, "No threads to show!\nPress ENTER to continue", ANSSIZE);
-			return ;
-		}
 
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)															/* Check that the ID of the topic exists */
 		if(id >= id_counter[TOPICCOUNTER] || (topic[j].topicid != id && j==id_counter[TOPICCOUNTER]-1) || id <= 0)
 		{
-			ping(client_socket, "This topic does not exist!\nPress ENTER to continue!", ANSSIZE);
+			ping(client_socket, "\nThis topic does not exist!\nPress ENTER to continue!", ANSSIZE);
 			return ;
 		}
 		else if(topic[j].topicid == id)																		/* If yes */
@@ -247,6 +241,7 @@ void display_topic_content(int client_socket, int current_id)
 				if(user[current_id].topics_sub[i] == id)													/* If the user is subscribed at this topic */
 				{
 					for(int x=0; x<id_counter[THREADCOUNTER]; x++)											/* For each existing thread */
+					{
 						if(thread[x].threadid > 0 && thread[x].topicid == id)								/* Belonging to this topic */
 						{
 							/* Send the thread infos line */
@@ -258,7 +253,7 @@ void display_topic_content(int client_socket, int current_id)
 								if(message[y].threadid == thread[x].threadid)								/* Belonging to this thread */
 								{
 									/* Send all the messages */
-									size2=asprintf(&res2, "\tID: %d\t%s: %s\n\n", message[y].msgid, message[y].creator, message[y].content);
+									size2=asprintf(&res2, "\tID: %d\t%s: %s\n", message[y].msgid, message[y].creator, message[y].content);
 									send(client_socket, res2, size2, 0);
 									free(res2);
 
@@ -267,13 +262,14 @@ void display_topic_content(int client_socket, int current_id)
 											user[current_id].unread_msg[z]=0;
 								}
 						}
+					}
 
-					ping(client_socket, "Press ENTER to continue", ANSSIZE);
+					ping(client_socket, "\nPress ENTER to continue", ANSSIZE);
 					return ;
 				}
 				else if(user[current_id].topics_sub[i] != id && i == MAXSUBS-1)
 				{
-					ping(client_socket, "You can't see topics you're not subscribed to!\nPress ENTER to continue", ANSSIZE);
+					ping(client_socket, "\nYou can't see topics you're not subscribed to!\nPress ENTER to continue", ANSSIZE);
 					return ;
 				}
 		}	

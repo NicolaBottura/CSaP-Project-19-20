@@ -101,7 +101,7 @@ int authentication(int client_socket)
 	int namelen, passlen;
 
 	/* Send to the client the string to ask a username and copy the answer inside the variables(same for password) */
-	strcpy(name, ping(client_socket, "*** Welcome to Whiteboard ***\nUsername: ", AUTHLEN));
+	strcpy(name, ping(client_socket, "\t~~~ Welcome to Whiteboard ~~~\n\t     @NicolaBottura 2020\n\nPlease insert,\nUsername: ", AUTHLEN));
 	strcpy(passwd, ping(client_socket, "Password: ", AUTHLEN));
 
 	/* Remove the '\n' from the user's input credentials */
