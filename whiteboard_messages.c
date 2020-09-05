@@ -99,8 +99,14 @@ void reply(int client_socket, int current_id)
 							if(user[i].usrid != current_id && user[i].unread_msg[x] == 0)					/* And if the user has not this message in the unread ones and has space to add a new instance */
 							{
 								user[i].unread_msg[x]=id_counter[MSGCOUNTER];								/* Add the ID of the new message in the unread messages array */
+								
+								if(x+1 == MAXUNREAD)
+									user[i].unread_msg[0]=0;
+								else
+									user[i].unread_msg[x+1]=0;
+								
 								break;
-							}						
+							}					
 
 			id_counter[MSGCOUNTER]+=1;																		/* At the end, increment the counter by 1 */
 

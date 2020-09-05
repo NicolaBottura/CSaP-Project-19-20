@@ -156,7 +156,7 @@ void list_topics(int client_socket, int current_id)
 void delete_topic(int client_socket, int current_id)
 {
 	char id_char[ANSSIZE];
-	int id;
+	int id, count;
 
 	strcpy(id_char, ping(client_socket, "\nChoose the topic ID you want to DELETE: ", ANSSIZE));
 	id=strtol(id_char, NULL, 0); 
@@ -206,6 +206,11 @@ void delete_topic(int client_socket, int current_id)
 				memset(topic[id].creator, 0, sizeof(topic[id].creator));					
 				memset(topic[id].name, 0, sizeof(topic[id].name));
 				topic[id].topicid=0;
+
+				if((count=check_number()) == 0)								/* Check how many topics there are, if none, set the counters as 1 */
+					printf("[DELETE TOPICS]: No more topics\n");
+				else if(count > 0)
+					printf("[DELETE TOPICS]: There are still %d topics\n", count);
 
 				ping(client_socket, "\nTopic deleted!\nPress ENTER to continue", ANSSIZE);
 
@@ -300,4 +305,32 @@ int unsubscribe(int client_socket, int current_id)
 					return -1;
 				}
 		}
+}
+
+/*
+	This function is called after a successfully removal of a topic and will check how many of them
+		are in the struct at the moment.
+	If there are no more topics, it will set the id_counter for topics, threads and messages as 1, so
+		when something new will be created, it will start from id 1.
+*/
+int check_number()
+{
+	int count=0;
+
+	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
+		if(topic[j].topicid == 0 && j==id_counter[TOPICCOUNTER]-1)	/* If there are no topics */
+		{
+			id_counter[TOPICCOUNTER]=1;
+			id_counter[THREADCOUNTER]=1;
+			id_counter[MSGCOUNTER]=1;
+
+			return 0;
+		}
+		else if(topic[j].topicid > 0)
+		{
+			count+=1;
+			continue;
+		}
+
+	return count;
 }

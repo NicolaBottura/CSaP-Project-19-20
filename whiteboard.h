@@ -76,7 +76,7 @@ int semid;
 /* -- Stuff for authentication process - LOCATION: whiteboard_auth.c -- */
 #define AUTHLEN 20							/* Max size for usernames and passwords */
 #define MAXSUBS 5							/* Max topics I can subscribes */
-#define MAXUNREAD 30						/* Max messages unreaded that can be stored */
+#define MAXUNREAD 10						/* Max messages unreaded that can be stored */
 #define CREDFILE "db/credentials.txt"
 #define SUBFILE "db/subscriptions.txt"
 #define UNREADMSG "db/unread_msg.txt"
@@ -166,6 +166,7 @@ void write_topics();
 void delete_topic(int client_socket, int current_id);
 void subscribe(int client_socket, int current_id);
 int unsubscribe(int client_socket, int current_id);
+int check_number();
 
 /* -- whiteboard_threads.c -- */
 void load_threads();
