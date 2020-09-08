@@ -133,14 +133,15 @@ void list_topics(int client_socket, int current_id)
 			for(int i=0; i<MAXSUBS; i++)
 				if(user[current_id].topics_sub[i] == topic[j].topicid)		/* If the user is subscribed to this topic */
 				{
-					size=asprintf(&res, "\nID: %d\tStatus: SUBSCRIBED\nCreator: %s\nTopic Name: %s\n", topic[j].topicid, topic[j].creator, topic[j].name);
+					size=asprintf(&res, "\nID: %d\tStatus: SUBSCRIBED\n\tCreator: %s\n\tTopic Name: %s\n", topic[j].topicid, topic[j].creator, topic[j].name);
 					break;
 				}
 				else if(user[current_id].topics_sub[i] != topic[j].topicid && i == MAXSUBS-1)
-					size=asprintf(&res, "\nID: %d\tStatus: NOT SUBSCRIBED\nCreator: %s\nTopic Name: %s\n", topic[j].topicid, topic[j].creator, topic[j].name);
+					size=asprintf(&res, "\nID: %d\tStatus: NOT SUBSCRIBED\n\tCreator: %s\n\tTopic Name: %s\n", topic[j].topicid, topic[j].creator, topic[j].name);
 
 			send(client_socket, res, size, 0);
-			//ping(client_socket, res, ANSSIZE);
+			
+			//ping(client_socket, res, ANSSIZE); 							/* Alternative to send() */
 			free(res);
 		}
 
@@ -210,7 +211,7 @@ void delete_topic(int client_socket, int current_id)
 				if((count=check_number()) == 0)								/* Check how many topics there are, if none, set the counters as 1 */
 					printf("[DELETE TOPICS]: No more topics\n");
 				else if(count > 0)
-					printf("[DELETE TOPICS]: There are still %d topics\n", count);
+					printf("[DELETE TOPICS]: There are still some topics present\n");
 
 				ping(client_socket, "\nTopic deleted!\nPress ENTER to continue", ANSSIZE);
 
@@ -315,8 +316,6 @@ int unsubscribe(int client_socket, int current_id)
 */
 int check_number()
 {
-	int count=0;
-
 	for(int j=0; j<id_counter[TOPICCOUNTER]; j++)
 		if(topic[j].topicid == 0 && j==id_counter[TOPICCOUNTER]-1)	/* If there are no topics */
 		{
@@ -327,10 +326,7 @@ int check_number()
 			return 0;
 		}
 		else if(topic[j].topicid > 0)
-		{
-			count+=1;
-			continue;
-		}
-
-	return count;
+			break;
+	
+	return 1;
 }

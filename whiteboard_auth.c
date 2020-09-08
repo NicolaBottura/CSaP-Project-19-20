@@ -20,7 +20,7 @@ void load_users()
 	fclose(fd);
 
 	return ;
-}			// TOGLI LA PASSWORD IN CHIARO QUANDO L'UTENTE SI LOGGA
+}
 
 /*
 	Load all the unread-message IDs and the subscribed topics for each user.
@@ -97,11 +97,11 @@ void write_utils()
 */
 int authentication(int client_socket)
 {
-	char name[AUTHLEN], passwd[AUTHLEN];
-	int namelen, passlen;
+	char name[AUTHLEN], passwd[AUTHLEN], *tmp;
+	int namelen, passlen, counter=0, size;
 
 	/* Send to the client the string to ask a username and copy the answer inside the variables(same for password) */
-	strcpy(name, ping(client_socket, "\t~~~ Welcome to Whiteboard ~~~\n\t     @NicolaBottura 2020\n\nPlease insert,\nUsername: ", AUTHLEN));
+	strcpy(name, ping(client_socket, "\nPlease insert,\nUsername: ", AUTHLEN));
 	strcpy(passwd, ping(client_socket, "Password: ", AUTHLEN));
 
 	/* Remove the '\n' from the user's input credentials */
@@ -119,6 +119,13 @@ int authentication(int client_socket)
 			user[j].logged=1;								/* If login was successful set the user as logged */
 			user[j].usrid=j;								/* set the client ID equal to the value of the counter */
 			user[j].pid=getpid();							/* set the pid equal to the PID of process who is managing this client */
+
+			for(int i=0; i<MAXUNREAD; i++)					/* Check how many unread messages has the current user */
+				if(user[j].unread_msg[i] > 0)
+					counter+=1;
+
+			size=asprintf(&tmp, "\nWelcome back %s! You have %d messages unread!\n", user[j].username, counter);	
+			send(client_socket, tmp, size, 0);				/* Show to the user the total number of unread messages */
 
 			return 0;										/* The just return */
 		}

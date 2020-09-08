@@ -38,11 +38,13 @@ int main(int argc, char *argv[])
 	for(;;)												/* Run forever */
 	{
 		client_socket=accept_connection(server_socket);	/* Call at the function that accept connections from clients */
-		
+
 		switch(pid=fork())								/* Fork a new (child) process */
 		{
 			case 0:										/* Child process */
 			{
+				ping(client_socket, WELCOME, ANSSIZE);	/* Welcome string with the ASCII art */
+
 				/* The authentication is blocking in order to make the clients authenticate only one at time */
 				p(SEMAUTH);								/* sem-1 for AUTH */
 				if(authentication(client_socket) < 0 )	/* Send the authentication form to the client */

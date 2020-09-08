@@ -56,7 +56,7 @@ char *ping(int client_socket, char *message, int reponse_len)
 		v(SEMAUTH);														/* Call the v-operation for both sempahores */
 		v(SEMTOPICS);													/* NOTE: this may cause not blocking operations for each time the v-operation was called if multiple clients crash togheter */
 		send(client_socket, error, sizeof(error), 0);
-		DieWithError("Max length exceeded or connection close on client side\n");
+		DieWithError("[PING]: Max length exceeded or connection closed on client side\n");
 	}
 	
 	return buff;

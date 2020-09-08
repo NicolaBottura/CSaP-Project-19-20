@@ -35,7 +35,7 @@ int accept_connection(int server_socket)
 	if((client_socket=accept(server_socket, (struct sockaddr *)&caddr, &len)) < 0)
 		DieWithError("accept() failed\n");
 
-	printf("Handling client %s\n", inet_ntoa(caddr.sin_addr));
+	printf("[ACCEPT_CONNECTION]: Handling client %s\n", inet_ntoa(caddr.sin_addr));
 
 	return client_socket;
 }

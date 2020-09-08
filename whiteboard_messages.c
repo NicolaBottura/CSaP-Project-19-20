@@ -151,7 +151,7 @@ void show_unread(int client_socket, int current_id)
 			if(user[current_id].unread_msg[j] > 0)															/* If I have unread messages show the ID, the writer and the thread of the message */
 			{		
 				pos=user[current_id].unread_msg[j]; 
-				size2=asprintf(&tmp2, "\nUNREAD message ID: %d\tFrom: %s\tIn threadd: %s\n", user[current_id].unread_msg[j], message[pos].creator, thread[message[pos].threadid].name);
+				size2=asprintf(&tmp2, "\nUnread message ID: %d\tFrom: %s\tIn threadd: %s\n", user[current_id].unread_msg[j], message[pos].creator, thread[message[pos].threadid].name);
 				send(client_socket, tmp2, size2, 0);
 			}
 
@@ -168,7 +168,7 @@ void show_unread(int client_socket, int current_id)
 					if(user[current_id].unread_msg[j] > 0)
 					{
 						pos=user[current_id].unread_msg[j]; 
-						size1=asprintf(&tmp1, "\nID: %d\t%s: %s\n\n", message[pos].msgid, message[pos].creator, message[pos].content);
+						size1=asprintf(&tmp1, "\n\tID: %d\t%s: %s\n\n", message[pos].msgid, message[pos].creator, message[pos].content);
 						send(client_socket, tmp1, size1, 0);
 						free(tmp1);
 					}
@@ -195,7 +195,7 @@ void show_unread(int client_socket, int current_id)
 						for(int j=0; j<MAXUNREAD; j++)
 							if(id == user[current_id].unread_msg[j])										/* Check again that the user has this message in the unread array */
 							{
-								size2=asprintf(&tmp2, "\n%s: %s\n\n", message[id].creator, message[id].content);
+								size2=asprintf(&tmp2, "\n\t%s: %s\n\n", message[id].creator, message[id].content);
 								send(client_socket, tmp2, size2, 0);
 
 								user[current_id].unread_msg[j]=0;
@@ -251,7 +251,7 @@ void display_topic_content(int client_socket, int current_id)
 						if(thread[x].threadid > 0 && thread[x].topicid == id)								/* Belonging to this topic */
 						{
 							/* Send the thread infos line */
-							size1=asprintf(&res1, "\nID: %d\tName: %s\tFrom: %s\tTopic: %s\nContent: %s\n\n", thread[x].threadid, thread[x].name, thread[x].creator, topic[id].name, thread[x].content);
+							size1=asprintf(&res1, "\nID: %d\tName: %s\tFrom: %s\tTopic: %s\n\tContent: %s\n\n", thread[x].threadid, thread[x].name, thread[x].creator, topic[id].name, thread[x].content);
 							send(client_socket, res1, size1, 0);
 							free(res1);
 

@@ -21,18 +21,22 @@ char buff[BUFFSIZE];
 
 /* -- General stuff -- */
 #define ANSSIZE 3							/* Used when expecting a number or the \n as answer to a ping() */
-#define MENU "\n****** WHITEBOARD MENU ******\n\n \
-1) Create a new topic\n \
-2) List topics\n \
-3) Delete a topic\n \
-4) Reply to a thread\n \
-5) Create a thread\n \
-6) Display a topic content\n \
-7) Subscribe to a topic\n \
-8) Show unread messages\n \
-9) Unsubscribe a topic\n \
-10) Quit\n \
-choose an operation: "
+#define MENU "\n\t### WHITEBOARD MENU ###\n \
+\t1) Create a new topic\n \
+\t2) List topics\n \
+\t3) Delete a topic\n \
+\t4) Reply to a thread\n \
+\t5) Create a thread\n \
+\t6) Display a topic content\n \
+\t7) Subscribe to a topic\n \
+\t8) Show unread messages\n \
+\t9) Unsubscribe a topic\n \
+\t10) Quit\n \
+\tchoose an operation: "
+
+#define WELCOME " ___       __   ___  ___  ___  _________  _______   ________  ________  ________  ________  ________     \n|\\  \\     |\\  \\|\\  \\|\\  \\|\\  \\|\\___   ___\\\\  ___ \\ |\\   __  \\|\\   __  \\|\\   __  \\|\\   __  \\|\\   ___ \\    \n\\ \\  \\    \\ \\  \\ \\  \\\\\\  \\ \\  \\|___ \\  \\_\\ \\   __/|\\ \\  \\|\\ /\\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\_|\\ \\   \n \\ \\  \\  __\\ \\  \\ \\   __  \\ \\  \\   \\ \\  \\ \\ \\  \\_|/_\\ \\   __  \\ \\  \\\\\\  \\ \\   __  \\ \\   _  _\\ \\  \\ \\\\ \\  \n  \\ \\  \\|\\__\\_\\  \\ \\  \\ \\  \\ \\  \\   \\ \\  \\ \\ \\  \\_|\\ \\ \\  \\|\\  \\ \\  \\\\\\  \\ \\  \\ \\  \\ \\  \\\\  \\\\ \\  \\_\\\\ \\ \n   \\ \\____________\\ \\__\\ \\__\\ \\__\\   \\ \\__\\ \\ \\_______\\ \\_______\\ \\_______\\ \\__\\ \\__\\ \\__\\\\ _\\\\ \\_______\\\n    \\|____________|\\|__|\\|__|\\|__|    \\|__|  \\|_______|\\|_______|\\|_______|\\|__|\\|__|\\|__|\\|__|\\|_______|\n                                                                                                         \n\t\t\t\t\t   @Nicola Bottura 2020\n\n\t\t\t\tP R E S S  E N T E R  T O  C O N T I N U E\n"
+
+
 /* Both used only in server.c */
 int server_socket, 							/* Server Socket FD */
 client_socket;								/* Client Socket FD */
