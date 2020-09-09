@@ -195,7 +195,7 @@ void show_unread(int client_socket, int current_id)
 						for(int j=0; j<MAXUNREAD; j++)
 							if(id == user[current_id].unread_msg[j])										/* Check again that the user has this message in the unread array */
 							{
-								size2=asprintf(&tmp2, "\n\t%s: %s\n\n", message[id].creator, message[id].content);
+								size2=asprintf(&tmp2, "\n\t%s: %s\n", message[id].creator, message[id].content);
 								send(client_socket, tmp2, size2, 0);
 
 								user[current_id].unread_msg[j]=0;

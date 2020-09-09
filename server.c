@@ -180,8 +180,10 @@ int serve_the_client()
 
 			user[current_id].logged=0;					/* The client will result as not logged in */
 
-			ping(client_socket, "Exiting the program\nBYE!", 0);
-			close(client_socket);
+			char tmp[] = "Exiting the program\nBYE!";
+
+			send(client_socket, tmp, sizeof(tmp), 0);
+			close(client_socket);						
 			exit(1);
 		}
 		default:										/* If the user enter a number not between 1 and 10 or something else */
