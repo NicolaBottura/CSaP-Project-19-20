@@ -44,6 +44,28 @@ void write_threads()
 	if((fd=fopen(THREADDB, "w")) < 0)													/* Open the file in WRITE mode to overwrite the content of it */
 		DieWithError("open() in write_threads() failed\n");
 	
+	for(int j=0; j<id_counter[THREADCOUNTER]; j++)										/* After the crash of some clients, if the sempahores for the topics are >1 so more than a client can do operations for them */
+		for(int i=0; i<id_counter[TOPICCOUNTER]; i++)									/* For example, someone delete a topic while another client is appending a thread and after this the topic is deleted but the thread not */
+			if(thread[j].topicid != topic[i].topicid && i == id_counter[TOPICCOUNTER]-1)/* Check, when the server exits, if there are threads "alone" and delete them with also the associated messages */
+			{
+				for(int y=0; y<id_counter[MSGCOUNTER]; y++)
+					if(thread[j].threadid == message[y].threadid)	/* If the message belongs to the thread */
+					{
+						/* -- Remove all the messages -- */
+						memset(message[y].creator, 0, sizeof(message[y].creator));
+						memset(message[y].content, 0, sizeof(message[y].content));
+						message[y].threadid=0;
+					}				
+
+				/* -- Then remove the thread -- */
+				memset(thread[j].name, 0, sizeof(thread[j].name));					
+				memset(thread[j].creator, 0, sizeof(thread[j].creator));
+				memset(thread[j].content, 0, sizeof(thread[j].content));
+				thread[j].topicid=0;
+				thread[j].threadid=0;
+			}
+			else continue;
+
 	for(int j=0; j<id_counter[THREADCOUNTER]; j++)
 	{
 		if(thread[j].threadid > 0)														/* Check that the topics exists - if not, the id is = 0 */

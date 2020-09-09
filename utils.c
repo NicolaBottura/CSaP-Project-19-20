@@ -51,7 +51,6 @@ char *ping(int client_socket, char *message, int reponse_len)
 
 	if(strlen(buff) > reponse_len || bytesreceived <= 0)				/* If the asnwer provided is longer than the expected one, or I receive nothing(used for ctrl+c), the client exits */ 
 	{
-		printf("len\n");
 		current_id=getcurrentid();
 		user[current_id].logged=0;
 		v(SEMAUTH);														/* Call the v-operation for both sempahores */
