@@ -38,3 +38,4 @@ while for the client
 Because of the send/recv and recv/send combination for the communication between client and server, I noticed that, when sending too much data(~16 topics for example) with just a send() function, the output will be truncated on the client console and to complete the list of elements it will need to press ENTER again, so the server will receive too much data in response than the expected amount and the client will terminate.
 A possible solution is the commented line 143 in whiteboard_topics.c, which will send all the topics with a ping() function instead of just a send().
 But in this way, the client will press ENTER to display each topic and if they are many it can be tedious.
+Since this was just a project for an exam, this code may be not that much robust, for example there are no checks for the total size of shared memory used(it's easy to solve but I'm lazy, sorry).
